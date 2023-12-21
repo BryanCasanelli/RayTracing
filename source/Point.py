@@ -21,6 +21,15 @@ class Point:
         self.y = y
         self.z = z
 
+    def copy(self):
+        """
+        Returns a copy of the Point.
+
+        Returns:
+            Point: A copy of the Point.
+        """
+        return Point(self.x, self.y, self.z)
+
     def get_coordinates(self) -> tuple:
         """
         Returns the coordinates of the point as a tuple.
