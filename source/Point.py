@@ -21,6 +21,16 @@ class Point:
         self.y = y
         self.z = z
 
+    def get_coordinates(self) -> tuple:
+        """
+        Returns the coordinates of the point as a tuple.
+
+        Returns:
+            tuple: The point as a tuple (x, y, z).
+        """
+        return self.x, self.y, self.z
+
+
     def __str__(self) -> str:
         """
         Returns a string representation of the Point.
