@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
 
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
+        self.update_visualization()
 
         # Create the vertical layout and add the widgets
         layout = QVBoxLayout()
