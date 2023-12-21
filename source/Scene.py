@@ -85,10 +85,10 @@ class Scene:
                 shading_filter = ShadingFilter()
                 mesh.attach(shading_filter)
 
-        # Attach headlight to the scene
-        light_dir = (0, 1, 0, 0)
-        shading_filter.light_dir = light_dir[:3]
-        view.camera.transform.imap(light_dir)
+                # Attach headlight to the scene
+                light_dir = (0, 1, 0, 0)
+                shading_filter.light_dir = light_dir[:3]
+                view.camera.transform.imap(light_dir)
 
         # Add coordinate axes to the scene
         axis_x = scene.visuals.Line(pos=np.array([[0, 0, 0], [1e4, 0, 0]]), color='red')
