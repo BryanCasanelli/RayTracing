@@ -1,7 +1,19 @@
-import random
-import numpy as np
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
 
-class RayTracing():
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
-    def __init__(self) -> None:
-        pass
+        self.setWindowTitle("Ray Tracing")
+        self.button = QPushButton("Press me!")
+
+        self.setCentralWidget(self.button)
+
+def main():
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec()
+
+if __name__ == "__main__":
+    main()
