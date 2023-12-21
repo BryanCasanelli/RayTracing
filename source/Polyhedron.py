@@ -64,17 +64,19 @@ class Polyhedron:
                     indices = [int(part.split('/')[0]) - 1 for part in parts[1:]]  # OBJ indices start at 1
                     if len(indices) == 3:
                         # It's a triangle
-                        triangle = TriangularPlanarPolygon([self.vertices[i] for i in indices])
+                        triangle = TriangularPlanarPolygon([self.vertices[i].copy() for i in indices])
                         self.face_indices.append(indices)
                         self.add_face(triangle)
                     elif len(indices) == 4:
                         # It's a rectangle, create a RectangularPlanarPolygon
-                        rectangle = RectangularPlanarPolygon([self.vertices[i] for i in indices])
+                        rectangle = RectangularPlanarPolygon([self.vertices[i].copy() for i in indices])
                         # Decompose the rectangle into two triangles
                         self.add_face(rectangle.triangle1)
                         self.face_indices.append([indices[0], indices[1], indices[2]])
                         self.add_face(rectangle.triangle2)
                         self.face_indices.append([indices[2], indices[3], indices[0]])
+
+        
 
     def _are_points_distinct(self, points):
         """
@@ -111,6 +113,26 @@ class Polyhedron:
         else:
             raise TypeError("Unsupported polygon type.")
         
+    def translate(self, dx, dy, dz):
+        """
+        Translates the Polyhedron by the specified amounts in the x, y, and z directions.
+
+        Args:
+            dx (float): The amount to translate in the x direction.
+            dy (float): The amount to translate in the y direction.
+            dz (float): The amount to translate in the z direction.
+        """
+        for vertex in self.vertices:
+            vertex.x += dx
+            vertex.y += dy
+            vertex.z += dz
+
+        for face in self.faces:
+            for vertex in face.vertices:
+                vertex.x += dx
+                vertex.y += dy
+                vertex.z += dz
+    
     def __str__(self) -> str:
         """
         Returns a string representation of the Polyhedron, showing all points of each face.
