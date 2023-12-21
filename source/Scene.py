@@ -1,9 +1,11 @@
-import plotly.graph_objects as go
 from TriangularPlanarPolygon import TriangularPlanarPolygon
 from Polyhedron import Polyhedron
 from RectangularPlanarPolygon import RectangularPlanarPolygon
 from Point import Point
 from RaySource import RaySource
+import numpy as np
+from vispy import scene
+from vispy.visuals.filters import ShadingFilter
 
 class Scene:
     """
@@ -40,64 +42,61 @@ class Scene:
             self.objects.append(polyhedron)
         else:
             self.objects.append(object)
-
-    def show(self, num_rays_per_source=1000, ray_preview_radius=30):
+    
+    def vispy_display(self, canvas):
         """
-        Visualizes all the objects in the scene using Plotly, including rays from RaySources.
+        Shows the faces of each Polyhedron as a mesh surface using VisPy.
 
         Args:
-            num_rays_per_source (int): Number of rays to generate per RaySource.
-            ray_preview_radius (float): Radius of ray previsualization.
+            canvas (VisPy canvas): The VisPy canvas to display the scene.
+
         """
-        # Initialize Plotly figure
-        fig = go.Figure()
 
-        # Visualize Polyhedrons and Points
-        for object in self.objects:
-            if isinstance(object, Polyhedron):
-                x, y, z = [], [], []
-                i, j, k = [], [], []
-                for face in object.faces:
-                    start_index = len(x)
-                    for vertex in face.vertices:
-                        x.append(vertex.x)
-                        y.append(vertex.y)
-                        z.append(vertex.z)
+        # Remove all children from the central widget
+        for child in list(canvas.central_widget.children):
+            canvas.central_widget.remove_widget(child)
 
-                    for n in range(1, len(face.vertices) - 1):
-                        i.append(start_index)
-                        j.append(start_index + n)
-                        k.append(start_index + n + 1)
+        # Add a view to the central widget
+        view = canvas.central_widget.add_view()
 
-                # Add the polyhedron as a mesh to the plot
-                fig.add_trace(go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k, opacity=0.5))
+        # Set the camera parameters
+        view.camera = 'turntable'
+        view.camera.fov = 0
+        view.camera.scale_factor = 300
 
-            elif isinstance(object, Point):
-                fig.add_trace(go.Scatter3d(x=[object.x], y=[object.y], z=[object.z], mode='markers'))
+        # Add each Polyhedron to the scene
+        for obj in self.objects:
+            if isinstance(obj, Polyhedron):
 
-        # Visualize rays from RaySource objects
-        for object in self.objects:
-            if isinstance(object, RaySource):
-                for _ in range(num_rays_per_source):
-                    ray = object.get_next_ray()
-                    end_point = Point(ray.origin.x + ray_preview_radius * ray.normal.x, 
-                                    ray.origin.y + ray_preview_radius * ray.normal.y, 
-                                    ray.origin.z + ray_preview_radius * ray.normal.z)
+                # Get the vertices and face indices of the Polyhedron
+                vertices = np.array([vertex.get_coordinates() for vertex in obj.vertices])
+                faces = np.array(obj.face_indices)
 
-                    fig.add_trace(go.Scatter3d(x=[ray.origin.x, end_point.x],
-                                            y=[ray.origin.y, end_point.y],
-                                            z=[ray.origin.z, end_point.z],
-                                            mode='lines',
-                                            line=dict(color=f'rgba{ray.wavelength_to_rgba()}')))
+                # Create a colored `MeshVisual` using the vertices and faces
+                face_colors = np.tile((0.5, 0.0, 0.5, 1.0), (len(faces), 1))
+                mesh = scene.visuals.Mesh(
+                    vertices,
+                    faces,
+                    face_colors=face_colors.copy()
+                )
+                view.add(mesh)
 
-        # Configure and display the figure
-        fig.update_layout(scene=dict(xaxis_title='X',
-                                    yaxis_title='Y',
-                                    zaxis_title='Z',
-                                    xaxis=dict(visible=True),
-                                    yaxis=dict(visible=True),
-                                    zaxis=dict(visible=True)))
-        fig.show()
+                # Add shading to the mesh
+                shading_filter = ShadingFilter()
+                mesh.attach(shading_filter)
+
+        # Attach headlight to the scene
+        light_dir = (0, 1, 0, 0)
+        shading_filter.light_dir = light_dir[:3]
+        view.camera.transform.imap(light_dir)
+
+        # Add coordinate axes to the scene
+        axis_x = scene.visuals.Line(pos=np.array([[0, 0, 0], [1e4, 0, 0]]), color='red')
+        view.add(axis_x)
+        axis_y = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 1e4, 0]]), color='green')
+        view.add(axis_y)
+        axis_z = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 0, 1e4]]), color='blue')
+        view.add(axis_z)
 
     def __str__(self) -> str:
         """
