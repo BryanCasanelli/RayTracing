@@ -22,7 +22,8 @@ class Scene:
         Initializes a new Scene object.
         """
         self.objects = []
-        self.camera_parameters = None
+        self._camera_parameters = None
+        
 
     def add_object(self, object):
         """
@@ -76,8 +77,8 @@ class Scene:
         view.camera.scale_factor = 300
 
         # Restore the camera parameters if they have been saved
-        if self.camera_parameters is not None:
-            view.camera.set_state(self.camera_parameters)
+        if self._camera_parameters is not None:
+            view.camera.set_state(self._camera_parameters)
 
         # Connect the callback to the transform_updated event
         view.camera.events.transform_change.connect(self._save_camera_parameters)
@@ -114,11 +115,12 @@ class Scene:
                 view.add(position_marker)
 
         # Add coordinate axes to the scene
-        axis_x = scene.visuals.Line(pos=np.array([[0, 0, 0], [1e4, 0, 0]]), color='red')
+        length = 1e20
+        axis_x = scene.visuals.Line(pos=np.array([[0, 0, 0], [length, 0, 0]]), color='red')
         view.add(axis_x)
-        axis_y = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 1e4, 0]]), color='green')
+        axis_y = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, length, 0]]), color='green')
         view.add(axis_y)
-        axis_z = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 0, 1e4]]), color='blue')
+        axis_z = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 0, length]]), color='blue')
         view.add(axis_z)
 
     def _save_camera_parameters(self, event):
@@ -128,7 +130,7 @@ class Scene:
         Args:
             event (vispy Event): The event that triggered the callback.
         """
-        self.camera_parameters = event.source.get_state()
+        self._camera_parameters = event.source.get_state()
 
     def __str__(self) -> str:
         """
