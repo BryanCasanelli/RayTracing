@@ -243,6 +243,7 @@ class ChangeReferencePointDialog(QDialog):
 
         self.setLayout(main_layout)
 
+        self.ref_type_combo_box.setCurrentIndex(1)
         self.ref_type_combo_box.setCurrentIndex(0)
 
     def get_values(self):
