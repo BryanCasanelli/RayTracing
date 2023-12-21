@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter
 from Scene import Scene
 from Polyhedron import Polyhedron
 from vispy import scene
@@ -17,24 +18,33 @@ class MainWindow(QMainWindow):
         self.scene = Scene()
 
         # Create the "Open 3D file" button
-        self.button = QPushButton("Add 3D file")
+        self.button = QPushButton("Add 3D object")
         self.button.clicked.connect(self.open_file_dialog)
 
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
         self.update_visualization()
 
-        # Create the vertical layout and add the widgets
-        layout = QVBoxLayout()
-        layout.addWidget(self.button)
-        layout.addWidget(self.vispy_canvas.native)
+        # Create the table widget
+        self.table_widget = QTableWidget()
+        self.table_widget.setColumnCount(4)
+        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces"])
+        self.set_table_size()
 
-        # Create a container widget and set the layout
-        widget = QWidget()
-        widget.setLayout(layout)
+        # Table + VisPy canvas
+        splitter1 = QSplitter(Qt.Horizontal)
+        splitter1.addWidget(self.table_widget)
+        splitter1.addWidget(self.vispy_canvas.native)
+        splitter1.setSizes([1, 10000])
 
-        # Set the container widget as the central widget
-        self.setCentralWidget(widget)
+        # Add 3d object button  + (Table + VisPy canvas)
+        splitter2 = QSplitter(Qt.Vertical)
+        splitter2.addWidget(self.button)
+        splitter2.addWidget(splitter1)
+        splitter2.setSizes([1, 10000])
+
+        # Set the splitter as the central widget
+        self.setCentralWidget(splitter2)
 
     def open_file_dialog(self):
         """
@@ -54,11 +64,29 @@ class MainWindow(QMainWindow):
             # Update the visualization
             self.update_visualization()
 
+            # Add the Polyhedron to the table
+            row = self.table_widget.rowCount()
+            self.table_widget.insertRow(row)
+            self.table_widget.setItem(row, 0, QTableWidgetItem(type(polyhedron).__name__))
+            self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
+            self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
+            self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
+            self.set_table_size()
+
     def update_visualization(self):
         """
         Updates the visualization of the scene in the VisPy canvas.
         """
         self.scene.vispy_display(self.vispy_canvas)
+
+    def set_table_size(self):
+        self.table_widget.resizeColumnsToContents()
+        self.table_widget.resizeRowsToContents()
+        width = sum(self.table_widget.columnWidth(i)+1 for i in range(self.table_widget.columnCount()))
+        width += self.table_widget.verticalHeader().width()
+        if self.table_widget.rowCount() > 0:
+            width += 12
+        self.table_widget.setMinimumWidth(width)
 
 def main():
     """
