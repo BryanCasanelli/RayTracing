@@ -22,6 +22,7 @@ class Scene:
         Initializes a new Scene object.
         """
         self.objects = []
+        self.camera_parameters = None
 
     def add_object(self, object):
         """
@@ -74,6 +75,13 @@ class Scene:
         view.camera.fov = 0
         view.camera.scale_factor = 300
 
+        # Restore the camera parameters if they have been saved
+        if self.camera_parameters is not None:
+            view.camera.set_state(self.camera_parameters)
+
+        # Connect the callback to the transform_updated event
+        view.camera.events.transform_change.connect(self._save_camera_parameters)
+
         # Add each Polyhedron to the scene
         for obj in self.objects:
             if isinstance(obj, Polyhedron):
@@ -112,6 +120,15 @@ class Scene:
         view.add(axis_y)
         axis_z = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 0, 1e4]]), color='blue')
         view.add(axis_z)
+
+    def _save_camera_parameters(self, event):
+        """
+        Saves the parameters of the camera.
+
+        Args:
+            event (vispy Event): The event that triggered the callback.
+        """
+        self.camera_parameters = event.source.get_state()
 
     def __str__(self) -> str:
         """
