@@ -27,6 +27,15 @@ class TriangularPlanarPolygon:
         self.vertices = points
         self.normal = self._calculate_normal()
 
+    def get_vertices(self) -> list:
+        """
+        Returns the vertices of the triangle as an array of Point objects.
+
+        Returns:
+            list: The vertices of the triangle.
+        """
+        return self.vertices
+
     def _calculate_normal(self) -> Vector:
         """
         Calculates the normal vector of the triangle's plane.
