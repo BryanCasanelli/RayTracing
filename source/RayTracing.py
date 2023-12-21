@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
         self.table_widget.setColumnCount(4)
         self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.set_table_size()
 
         # Table + VisPy canvas
