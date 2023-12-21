@@ -21,6 +21,10 @@ class MainWindow(QMainWindow):
         self.button = QPushButton("Add 3D object")
         self.button.clicked.connect(self.open_file_dialog)
 
+        # Create the "Delete object" button
+        self.delete_button = QPushButton("Delete object")
+        self.delete_button.clicked.connect(self.delete_selected_object)
+
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
         self.update_visualization()
@@ -31,7 +35,7 @@ class MainWindow(QMainWindow):
         self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.set_table_size()
+        self.update_table()
 
         # Right pannel
         splitter1 = QSplitter(Qt.Vertical)
@@ -39,15 +43,21 @@ class MainWindow(QMainWindow):
         splitter1.addWidget(QWidget())
         splitter1.setSizes([1, 10000])
 
-        # All
-        splitter2 = QSplitter(Qt.Horizontal)
+        # Left pannel
+        splitter2 = QSplitter(Qt.Vertical)
         splitter2.addWidget(self.table_widget)
-        splitter2.addWidget(self.vispy_canvas.native)
-        splitter2.addWidget(splitter1)
-        splitter2.setSizes([1, 10000, 1])
+        splitter2.addWidget(self.delete_button)
+        splitter2.setSizes([10000, 1])
+
+        # All
+        splitter3 = QSplitter(Qt.Horizontal)
+        splitter3.addWidget(splitter2)
+        splitter3.addWidget(self.vispy_canvas.native)
+        splitter3.addWidget(splitter1)
+        splitter3.setSizes([1, 10000, 1])
 
         # Set the splitter as the central widget
-        self.setCentralWidget(splitter2)
+        self.setCentralWidget(splitter3)
 
     def open_file_dialog(self):
         """
@@ -65,17 +75,8 @@ class MainWindow(QMainWindow):
                 # Add the Polyhedron to the Scene
                 self.scene.add_object(polyhedron)
 
-                # Update the visualization
-                self.update_visualization()
-
-                # Add the Polyhedron to the table
-                row = self.table_widget.rowCount()
-                self.table_widget.insertRow(row)
-                self.table_widget.setItem(row, 0, QTableWidgetItem(type(polyhedron).__name__))
-                self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
-                self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
-                self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
-                self.set_table_size()
+        # Update the visualization and the table
+        self.update()
 
     def update_visualization(self):
         """
@@ -83,17 +84,43 @@ class MainWindow(QMainWindow):
         """
         self.scene.vispy_display(self.vispy_canvas)
 
-    def set_table_size(self):
+    def update_table(self):
         """
-        Resizes the table widget to fit its contents and sets the minimum width based on the content size.
+        Updates the table widget with information about the objects in the scene.
         """
+        self.table_widget.clearContents()
+        self.table_widget.setRowCount(len(self.scene.objects))
+        for row, polyhedron in enumerate(self.scene.objects):
+            self.table_widget.setItem(row, 0, QTableWidgetItem(type(polyhedron).__name__))
+            self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
+            self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
+            self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
-        width = sum(self.table_widget.columnWidth(i)+1 for i in range(self.table_widget.columnCount()))
+        width = sum(self.table_widget.columnWidth(i) + 1 for i in range(self.table_widget.columnCount()))
         width += self.table_widget.verticalHeader().width()
         if self.table_widget.rowCount() > 0:
             width += 12
         self.table_widget.setMinimumWidth(width)
+
+    def update(self):
+        """
+        Updates the visualization and the table.
+        """
+        self.update_visualization()
+        self.update_table()
+
+    def delete_selected_object(self):
+        """
+        Deletes the currently selected objects from the scene and the table.
+        """
+        selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()), reverse=True)
+        for row in selected_rows:
+            # Remove the object from the scene
+            self.scene.remove_object(row)
+
+        # Update the visualization and the table
+        self.update()
 
 def main():
     """
