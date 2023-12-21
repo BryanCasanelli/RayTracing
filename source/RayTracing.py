@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView
 from Scene import Scene
 from Polyhedron import Polyhedron
 from vispy import scene
@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(4)
         self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces"])
+        self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.set_table_size()
 
         # Table + VisPy canvas
