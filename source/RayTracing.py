@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout
 from Scene import Scene
 from Polyhedron import Polyhedron
 from vispy import scene
@@ -25,8 +25,13 @@ class MainWindow(QMainWindow):
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_selected_object)
 
+        # Create the "Move object" button
         self.move_button = QPushButton("Move")
         self.move_button.clicked.connect(self.move_selected_object)
+
+        # Create the "Change reference point" button
+        self.change_ref_button = QPushButton("Change reference point")
+        self.change_ref_button.clicked.connect(self.change_reference_point)
 
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
@@ -47,6 +52,7 @@ class MainWindow(QMainWindow):
         self.buttons_layout.addWidget(self.add_button)
         self.buttons_layout.addWidget(self.delete_button)
         self.buttons_layout.addWidget(self.move_button)
+        self.buttons_layout.addWidget(self.change_ref_button)
         self.buttons_widget = QWidget()
         self.buttons_widget.setLayout(self.buttons_layout)
 
@@ -104,9 +110,9 @@ class MainWindow(QMainWindow):
             self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
             self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
             self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
-            self.table_widget.setItem(row, 4, QTableWidgetItem(format(polyhedron.position.x, '.2f')))
-            self.table_widget.setItem(row, 5, QTableWidgetItem(format(polyhedron.position.y, '.2f')))
-            self.table_widget.setItem(row, 6, QTableWidgetItem(format(polyhedron.position.z, '.2f')))
+            self.table_widget.setItem(row, 4, QTableWidgetItem(format(polyhedron.reference.x, '.2f')))
+            self.table_widget.setItem(row, 5, QTableWidgetItem(format(polyhedron.reference.y, '.2f')))
+            self.table_widget.setItem(row, 6, QTableWidgetItem(format(polyhedron.reference.z, '.2f')))
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
         width = sum(self.table_widget.columnWidth(i) + 1 for i in range(self.table_widget.columnCount()))
@@ -141,9 +147,11 @@ class MainWindow(QMainWindow):
         if self.table_widget.selectedItems():
             self.delete_button.setEnabled(True)
             self.move_button.setEnabled(True)
+            self.change_ref_button.setEnabled(True)
         else:
             self.delete_button.setEnabled(False)
             self.move_button.setEnabled(False)
+            self.change_ref_button.setEnabled(False)
 
     def move_selected_object(self):
         """
@@ -160,6 +168,70 @@ class MainWindow(QMainWindow):
 
         # Update the visualization and the table
         self.update()
+
+    def change_reference_point(self):
+        """
+        Opens a dialog to change the reference point.
+        """
+        dialog = ChangeReferencePointDialog(self)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            ref_type, axis = dialog.get_values()
+            selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
+            for row in selected_rows:
+                # Change the reference point
+                self.scene.objects[row].change_reference_point(ref_type, axis)
+
+        # Update the visualization and the table
+        self.update()
+
+class ChangeReferencePointDialog(QDialog):
+    """
+    A dialog window for changing the reference point.
+
+    Methods:
+        __init__(self, parent=None): Initializes the ChangeReferencePointDialog.
+        get_values(self): Returns the selected reference type and axis.
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Change reference point")
+
+        self.ref_type_combo_box = QComboBox(self)
+        self.ref_type_combo_box.addItems(["Lowest", "Highest"])
+
+        self.axis_combo_box = QComboBox(self)
+        self.axis_combo_box.addItems(["x", "y", "z"])
+
+        form_layout = QFormLayout()
+        form_layout.addRow("Reference type:", self.ref_type_combo_box)
+        form_layout.addRow("Axis:", self.axis_combo_box)
+
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+
+        self.setLayout(main_layout)
+
+    def get_values(self):
+        """
+        Returns the selected reference type and axis.
+
+        Returns:
+            Tuple[str, str]: The selected reference type and axis.
+        """
+        return self.ref_type_combo_box.currentText(), self.axis_combo_box.currentText()
 
 class MoveObjectDialog(QDialog):
     """
