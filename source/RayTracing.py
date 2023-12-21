@@ -18,8 +18,8 @@ class MainWindow(QMainWindow):
         self.scene = Scene()
 
         # Create the "Add 3D object" button
-        self.button = QPushButton("Add 3D object")
-        self.button.clicked.connect(self.open_file_dialog)
+        self.add_button = QPushButton("Add 3D object")
+        self.add_button.clicked.connect(self.open_file_dialog)
 
         # Create the "Delete object" button
         self.delete_button = QPushButton("Delete object")
@@ -37,27 +37,27 @@ class MainWindow(QMainWindow):
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
 
-        # Right pannel
-        splitter1 = QSplitter(Qt.Vertical)
-        splitter1.addWidget(self.button)
-        splitter1.addWidget(QWidget())
-        splitter1.setSizes([1, 10000])
+        # Buttons pannel
+        self.buttons_layout = QVBoxLayout()
+        self.buttons_layout.addWidget(self.add_button)
+        self.buttons_layout.addWidget(self.delete_button)
+        self.buttons_widget = QWidget()
+        self.buttons_widget.setLayout(self.buttons_layout)
 
         # Left pannel
-        splitter2 = QSplitter(Qt.Vertical)
-        splitter2.addWidget(self.table_widget)
-        splitter2.addWidget(self.delete_button)
-        splitter2.setSizes([10000, 1])
+        splitter1 = QSplitter(Qt.Vertical)
+        splitter1.addWidget(self.buttons_widget)
+        splitter1.addWidget(self.table_widget)
+        splitter1.setSizes([1, 10000])
 
         # All
-        splitter3 = QSplitter(Qt.Horizontal)
-        splitter3.addWidget(splitter2)
-        splitter3.addWidget(self.vispy_canvas.native)
-        splitter3.addWidget(splitter1)
-        splitter3.setSizes([1, 10000, 1])
+        splitter2 = QSplitter(Qt.Horizontal)
+        splitter2.addWidget(splitter1)
+        splitter2.addWidget(self.vispy_canvas.native)
+        splitter2.setSizes([1, 10000])
 
         # Set the splitter as the central widget
-        self.setCentralWidget(splitter3)
+        self.setCentralWidget(splitter2)
 
     def open_file_dialog(self):
         """
