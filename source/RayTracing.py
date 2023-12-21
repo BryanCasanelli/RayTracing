@@ -80,6 +80,9 @@ class MainWindow(QMainWindow):
         self.scene.vispy_display(self.vispy_canvas)
 
     def set_table_size(self):
+        """
+        Resizes the table widget to fit its contents and sets the minimum width based on the content size.
+        """
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
         width = sum(self.table_widget.columnWidth(i)+1 for i in range(self.table_widget.columnCount()))
