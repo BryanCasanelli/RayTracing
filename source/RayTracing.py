@@ -31,8 +31,8 @@ class MainWindow(QMainWindow):
 
         # Create the table widget
         self.table_widget = QTableWidget()
-        self.table_widget.setColumnCount(4)
-        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces"])
+        self.table_widget.setColumnCount(7)
+        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
@@ -95,6 +95,9 @@ class MainWindow(QMainWindow):
             self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
             self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
             self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
+            self.table_widget.setItem(row, 4, QTableWidgetItem(format(polyhedron.position.x, '.2f')))
+            self.table_widget.setItem(row, 5, QTableWidgetItem(format(polyhedron.position.y, '.2f')))
+            self.table_widget.setItem(row, 6, QTableWidgetItem(format(polyhedron.position.z, '.2f')))
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
         width = sum(self.table_widget.columnWidth(i) + 1 for i in range(self.table_widget.columnCount()))
