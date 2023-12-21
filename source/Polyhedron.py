@@ -15,7 +15,7 @@ class Polyhedron:
                         a vacuum material (refractive index of 1) is created by default.
         vertices (list of Point): The vertices of the Polyhedron.
         face_indices (list of list of int): The indices of the vertices for each face.
-        position (Point): The position of the Polyhedron, set to the first vertex if available.
+        reference = self.vertices[0] if self.vertices else None
     """
 
     def __init__(self, source=None, material_path=None):
@@ -44,7 +44,7 @@ class Polyhedron:
                 self.add_face(polygon)
 
         # Set the position equals to the first vertex, if there is one
-        self.position = self.vertices[0] if self.vertices else None
+        self.reference = self.vertices[0].copy() if self.vertices else None
 
     def _parse_from_obj_file(self, filename):
         """
@@ -132,6 +132,24 @@ class Polyhedron:
                 vertex.x += dx
                 vertex.y += dy
                 vertex.z += dz
+
+    def change_reference_point(self, ref_type, axis):
+        """
+        Changes the reference point to the lowest or highest point on a specific axis.
+
+        Args:
+            ref_type (str): The reference type, either "Lowest" or "Highest".
+            axis (str): The axis, either "x", "y", or "z".
+        """
+        if not self.vertices:
+            return
+
+        if ref_type == "Lowest":
+            self.reference = min(self.vertices, key=lambda vertex: getattr(vertex, axis))
+        elif ref_type == "Highest":
+            self.reference = max(self.vertices, key=lambda vertex: getattr(vertex, axis))
+        else:
+            raise ValueError(f"Invalid reference type: {ref_type}")
     
     def __str__(self) -> str:
         """
