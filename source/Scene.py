@@ -111,7 +111,7 @@ class Scene:
 
                 # Add a marker at the position of the Polyhedron
                 position_marker = scene.visuals.Markers()
-                position_marker.set_data(np.array([obj.position.get_coordinates()]), face_color='yellow', size=10)
+                position_marker.set_data(np.array([obj.reference.get_coordinates()]), face_color='yellow', size=10)
                 view.add(position_marker)
 
         # Add coordinate axes to the scene
