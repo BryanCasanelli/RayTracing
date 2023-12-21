@@ -176,11 +176,11 @@ class MainWindow(QMainWindow):
         dialog = ChangeReferencePointDialog(self)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            ref_type, axis = dialog.get_values()
+            ref_type, axis, x, y, z = dialog.get_values()
             selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
             for row in selected_rows:
                 # Change the reference point
-                self.scene.objects[row].change_reference_point(ref_type, axis)
+                self.scene.objects[row].change_reference_point(ref_type, axis, x, y, z)
 
         # Update the visualization and the table
         self.update()
@@ -199,14 +199,33 @@ class ChangeReferencePointDialog(QDialog):
         self.setWindowTitle("Change reference point")
 
         self.ref_type_combo_box = QComboBox(self)
-        self.ref_type_combo_box.addItems(["Lowest", "Highest"])
+        self.ref_type_combo_box.addItems(["Lowest", "Highest", "Manual"])
+        self.ref_type_combo_box.currentTextChanged.connect(self.update_axis_combo_box)
 
         self.axis_combo_box = QComboBox(self)
         self.axis_combo_box.addItems(["x", "y", "z"])
 
+        self.x_spin_box = QDoubleSpinBox(self)
+        self.x_spin_box.setDecimals(2)
+        self.x_spin_box.setRange(-float('inf'), float('inf'))
+        self.x_spin_box.setMinimumWidth(20)
+
+        self.y_spin_box = QDoubleSpinBox(self)
+        self.y_spin_box.setDecimals(2)
+        self.y_spin_box.setRange(-float('inf'), float('inf'))
+        self.y_spin_box.setMinimumWidth(20)
+
+        self.z_spin_box = QDoubleSpinBox(self)
+        self.z_spin_box.setDecimals(2)
+        self.z_spin_box.setRange(-float('inf'), float('inf'))
+        self.z_spin_box.setMinimumWidth(20)
+
         form_layout = QFormLayout()
         form_layout.addRow("Reference type:", self.ref_type_combo_box)
         form_layout.addRow("Axis:", self.axis_combo_box)
+        form_layout.addRow("X:", self.x_spin_box)
+        form_layout.addRow("Y:", self.y_spin_box)
+        form_layout.addRow("Z:", self.z_spin_box)
 
         self.ok_button = QPushButton("OK", self)
         self.ok_button.clicked.connect(self.accept)
@@ -224,14 +243,35 @@ class ChangeReferencePointDialog(QDialog):
 
         self.setLayout(main_layout)
 
+        self.ref_type_combo_box.setCurrentIndex(0)
+
     def get_values(self):
         """
-        Returns the selected reference type and axis.
+        Get the values from the GUI elements.
 
         Returns:
-            Tuple[str, str]: The selected reference type and axis.
+            tuple: A tuple containing the current text of the reference type combo box,
+                    the current text of the axis combo box, and the values of the x, y, and z spin boxes.
         """
-        return self.ref_type_combo_box.currentText(), self.axis_combo_box.currentText()
+        return self.ref_type_combo_box.currentText(), self.axis_combo_box.currentText(), self.x_spin_box.value(), self.y_spin_box.value(), self.z_spin_box.value()
+
+    def update_axis_combo_box(self, text):
+        """
+        Enables or disables the axis combo box based on the current text of the reference type combo box.
+
+        Args:
+            text (str): The current text of the reference type combo box.
+        """
+        if text == "Manual":
+            self.axis_combo_box.setEnabled(False)
+            self.x_spin_box.setEnabled(True)
+            self.y_spin_box.setEnabled(True)
+            self.z_spin_box.setEnabled(True)
+        else:
+            self.axis_combo_box.setEnabled(True)
+            self.x_spin_box.setEnabled(False)
+            self.y_spin_box.setEnabled(False)
+            self.z_spin_box.setEnabled(False)
 
 class MoveObjectDialog(QDialog):
     """
