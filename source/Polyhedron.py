@@ -13,6 +13,7 @@ class Polyhedron:
         material (Material): The material of the Polyhedron. If no material path is provided,
                         a vacuum material (refractive index of 1) is created by default.
         vertices (list of Point): The vertices of the Polyhedron.
+        face_indices (list of list of int): The indices of the vertices for each face.
     """
 
     def __init__(self, source=None, material_path=None):
@@ -24,12 +25,13 @@ class Polyhedron:
             source (str or list, optional): The path to the OBJ file to parse, or a list of 
                 TriangularPlanarPolygons and RectangularPlanarPolygons.
                 If None, initializes an empty Polyhedron.
-                material_path (str, optional): The path to the material file. If None, a vacuum material
+            material_path (str, optional): The path to the material file. If None, a vacuum material
                                            (with a refractive index of 1) is created by default.
         """
         self.faces = []
         self.material = Material(material_path)
         self.vertices = []
+        self.face_indices = []
 
         if isinstance(source, str):
             self._parse_from_obj_file(source)
@@ -44,27 +46,28 @@ class Polyhedron:
         Args:
             filename (str): The path to the OBJ file.
         """
-        vertices = []
         with open(filename, 'r') as file:
             for line in file:
                 if line.startswith('v '):
                     parts = line.split()
                     point = Point(float(parts[1]), float(parts[2]), float(parts[3]))
-                    vertices.append(point)
+                    self.vertices.append(point)
                 elif line.startswith('f '):
                     parts = line.split()
                     indices = [int(part.split('/')[0]) - 1 for part in parts[1:]]  # OBJ indices start at 1
                     if len(indices) == 3:
                         # It's a triangle
-                        triangle = TriangularPlanarPolygon([vertices[i] for i in indices])
+                        triangle = TriangularPlanarPolygon([self.vertices[i] for i in indices])
+                        self.face_indices.append(indices)
                         self.add_face(triangle)
                     elif len(indices) == 4:
                         # It's a rectangle, create a RectangularPlanarPolygon
-                        rectangle = RectangularPlanarPolygon([vertices[i] for i in indices])
+                        rectangle = RectangularPlanarPolygon([self.vertices[i] for i in indices])
                         # Decompose the rectangle into two triangles
                         self.add_face(rectangle.triangle1)
+                        self.face_indices.append([indices[0], indices[1], indices[2]])
                         self.add_face(rectangle.triangle2)
-        self.vertices = [face.get_vertices() for face in self.faces];
+                        self.face_indices.append([indices[2], indices[3], indices[0]])
 
     def _are_points_distinct(self, points):
         """
