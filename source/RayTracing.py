@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         # Create a Scene instance
         self.scene = Scene()
 
-        # Create the "Open 3D file" button
+        # Create the "Add 3D object" button
         self.button = QPushButton("Add 3D object")
         self.button.clicked.connect(self.open_file_dialog)
 
@@ -33,17 +33,18 @@ class MainWindow(QMainWindow):
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.set_table_size()
 
-        # Table + VisPy canvas
-        splitter1 = QSplitter(Qt.Horizontal)
-        splitter1.addWidget(self.table_widget)
-        splitter1.addWidget(self.vispy_canvas.native)
+        # Right pannel
+        splitter1 = QSplitter(Qt.Vertical)
+        splitter1.addWidget(self.button)
+        splitter1.addWidget(QWidget())
         splitter1.setSizes([1, 10000])
 
-        # Add 3d object button  + (Table + VisPy canvas)
-        splitter2 = QSplitter(Qt.Vertical)
-        splitter2.addWidget(self.button)
+        # All
+        splitter2 = QSplitter(Qt.Horizontal)
+        splitter2.addWidget(self.table_widget)
+        splitter2.addWidget(self.vispy_canvas.native)
         splitter2.addWidget(splitter1)
-        splitter2.setSizes([1, 10000])
+        splitter2.setSizes([1, 10000, 1])
 
         # Set the splitter as the central widget
         self.setCentralWidget(splitter2)
