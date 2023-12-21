@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
 
         # Buttons pannel
         self.buttons_layout = QVBoxLayout()
+        self.buttons_layout.setSpacing(1)
         self.buttons_layout.addWidget(self.add_button)
         self.buttons_layout.addWidget(self.delete_button)
         self.buttons_widget = QWidget()
