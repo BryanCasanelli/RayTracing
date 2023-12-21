@@ -22,9 +22,19 @@ class RectangularPlanarPolygon:
         if len(points) != 4:
             raise ValueError("A RectangularPlanarPolygon must be initialized with exactly four points.")
 
+        self.points = points
         self.triangle1 = TriangularPlanarPolygon([points[0], points[1], points[2]])
         self.triangle2 = TriangularPlanarPolygon([points[2], points[3], points[0]])
         self.normal = self.triangle1.normal  # Using the normal from the first triangle
+
+    def get_vertices(self):
+        """
+        Returns a list of all the vertices of the rectangular polygon.
+
+        Returns:
+            list: A list containing all the vertices of the rectangular polygon.
+        """
+        return self.points
 
     def random_point_inside(self):
         """
