@@ -55,25 +55,26 @@ class MainWindow(QMainWindow):
         Returns:
             str: The selected file name.
         """
-        file_name, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "resources/obj", "OBJ Files (*.obj)")
-        if file_name:
-            # Create a new Polyhedron from the OBJ file
-            polyhedron = Polyhedron(file_name)
-            
-            # Add the Polyhedron to the Scene
-            self.scene.add_object(polyhedron)
+        file_names, _ = QFileDialog.getOpenFileNames(self, "QFileDialog.getOpenFileNames()", "resources/obj", "OBJ Files (*.obj)")
+        for file_name in file_names:
+            if file_name:
+                # Create a new Polyhedron from the OBJ file
+                polyhedron = Polyhedron(file_name)
+                
+                # Add the Polyhedron to the Scene
+                self.scene.add_object(polyhedron)
 
-            # Update the visualization
-            self.update_visualization()
+                # Update the visualization
+                self.update_visualization()
 
-            # Add the Polyhedron to the table
-            row = self.table_widget.rowCount()
-            self.table_widget.insertRow(row)
-            self.table_widget.setItem(row, 0, QTableWidgetItem(type(polyhedron).__name__))
-            self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
-            self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
-            self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
-            self.set_table_size()
+                # Add the Polyhedron to the table
+                row = self.table_widget.rowCount()
+                self.table_widget.insertRow(row)
+                self.table_widget.setItem(row, 0, QTableWidgetItem(type(polyhedron).__name__))
+                self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
+                self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
+                self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
+                self.set_table_size()
 
     def update_visualization(self):
         """
