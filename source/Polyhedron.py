@@ -12,6 +12,7 @@ class Polyhedron:
         faces (list of TriangularPlanarPolygon or RectangularPlanarPolygon): The faces of the 3D object.
         material (Material): The material of the Polyhedron. If no material path is provided,
                         a vacuum material (refractive index of 1) is created by default.
+        vertices (list of Point): The vertices of the Polyhedron.
     """
 
     def __init__(self, source=None, material_path=None):
@@ -28,6 +29,7 @@ class Polyhedron:
         """
         self.faces = []
         self.material = Material(material_path)
+        self.vertices = []
 
         if isinstance(source, str):
             self._parse_from_obj_file(source)
@@ -62,6 +64,7 @@ class Polyhedron:
                         # Decompose the rectangle into two triangles
                         self.add_face(rectangle.triangle1)
                         self.add_face(rectangle.triangle2)
+        self.vertices = [face.get_vertices() for face in self.faces];
 
     def _are_points_distinct(self, points):
         """
