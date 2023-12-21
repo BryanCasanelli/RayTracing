@@ -3,6 +3,7 @@ from TriangularPlanarPolygon import TriangularPlanarPolygon
 from RectangularPlanarPolygon import RectangularPlanarPolygon
 from Material import Material
 import warnings
+from pathlib import Path
 
 class Polyhedron:
     """
@@ -32,9 +33,11 @@ class Polyhedron:
         self.material = Material(material_path)
         self.vertices = []
         self.face_indices = []
+        self.name = None
 
         if isinstance(source, str):
             self._parse_from_obj_file(source)
+            self.name = Path(source).stem  # Set the name attribute using pathlib.Path
         elif isinstance(source, list):
             for polygon in source:
                 self.add_face(polygon)
