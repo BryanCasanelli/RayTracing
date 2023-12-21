@@ -133,13 +133,17 @@ class Polyhedron:
                 vertex.y += dy
                 vertex.z += dz
 
-    def change_reference_point(self, ref_type, axis):
+    def change_reference_point(self, ref_type, axis, x=None, y=None, z=None):
         """
-        Changes the reference point to the lowest or highest point on a specific axis.
+        Changes the reference point to the lowest or highest point on a specific axis,
+        or to the manually specified coordinates.
 
         Args:
-            ref_type (str): The reference type, either "Lowest" or "Highest".
+            ref_type (str): The reference type, either "Lowest", "Highest", or "Manual".
             axis (str): The axis, either "x", "y", or "z".
+            x (float): The x-coordinate of the new reference point (optional).
+            y (float): The y-coordinate of the new reference point (optional).
+            z (float): The z-coordinate of the new reference point (optional).
         """
         if not self.vertices:
             return
@@ -148,6 +152,10 @@ class Polyhedron:
             self.reference = min(self.vertices, key=lambda vertex: getattr(vertex, axis))
         elif ref_type == "Highest":
             self.reference = max(self.vertices, key=lambda vertex: getattr(vertex, axis))
+        elif ref_type == "Manual":
+            if x is None or y is None or z is None:
+                raise ValueError("Invalid coordinates for manual reference point.")
+            self.reference = Point(x, y, z)
         else:
             raise ValueError(f"Invalid reference type: {ref_type}")
     
