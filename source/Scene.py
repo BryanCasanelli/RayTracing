@@ -100,6 +100,11 @@ class Scene:
                 shading_filter.light_dir = light_dir[:3]
                 view.camera.transform.imap(light_dir)
 
+                # Add a marker at the position of the Polyhedron
+                position_marker = scene.visuals.Markers()
+                position_marker.set_data(np.array([obj.position.get_coordinates()]), face_color='yellow', size=10)
+                view.add(position_marker)
+
         # Add coordinate axes to the scene
         axis_x = scene.visuals.Line(pos=np.array([[0, 0, 0], [1e4, 0, 0]]), color='red')
         view.add(axis_x)
