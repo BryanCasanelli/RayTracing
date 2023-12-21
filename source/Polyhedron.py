@@ -15,6 +15,7 @@ class Polyhedron:
                         a vacuum material (refractive index of 1) is created by default.
         vertices (list of Point): The vertices of the Polyhedron.
         face_indices (list of list of int): The indices of the vertices for each face.
+        position (Point): The position of the Polyhedron, set to the first vertex if available.
     """
 
     def __init__(self, source=None, material_path=None):
@@ -41,6 +42,9 @@ class Polyhedron:
         elif isinstance(source, list):
             for polygon in source:
                 self.add_face(polygon)
+
+        # Set the position equals to the first vertex, if there is one
+        self.position = self.vertices[0] if self.vertices else None
 
     def _parse_from_obj_file(self, filename):
         """
