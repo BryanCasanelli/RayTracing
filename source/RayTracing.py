@@ -31,6 +31,7 @@ class MainWindow(QMainWindow):
 
         # Create the table widget
         self.table_widget = QTableWidget()
+        self.table_widget.itemSelectionChanged.connect(self.update_buttons_state)
         self.table_widget.setColumnCount(7)
         self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -59,6 +60,9 @@ class MainWindow(QMainWindow):
 
         # Set the splitter as the central widget
         self.setCentralWidget(splitter2)
+
+        # Update the state of the buttons
+        self.update_buttons_state()
 
     def open_file_dialog(self):
         """
@@ -125,6 +129,15 @@ class MainWindow(QMainWindow):
 
         # Update the visualization and the table
         self.update()
+
+    def update_buttons_state(self):
+        """
+        Updates the state of the buttons based on the selection in the table widget.
+        """
+        if self.table_widget.selectedItems():
+            self.delete_button.setEnabled(True)
+        else:
+            self.delete_button.setEnabled(False)
 
 def main():
     """
