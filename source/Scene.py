@@ -42,7 +42,17 @@ class Scene:
             self.objects.append(polyhedron)
         else:
             self.objects.append(object)
-    
+
+    def remove_object(self, index):
+        """
+        Removes an object from the scene based on its index.
+
+        Args:
+            index (int): The index of the object to remove.
+        """
+        if index >= 0 and index < len(self.objects):
+            del self.objects[index]
+
     def vispy_display(self, canvas):
         """
         Shows the faces of each Polyhedron as a mesh surface using VisPy.
