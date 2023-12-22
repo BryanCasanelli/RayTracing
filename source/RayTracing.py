@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
         for file_name in file_names:
             if file_name:
                 # Create a new Polyhedron from the OBJ file
-                polyhedron = Polyhedron(file_name)
+                polyhedron = Polyhedron(file_name, progress_callback_function = lambda x: self.progress_bar.setValue(int(x)))
                 
                 # Add the Polyhedron to the Scene
                 self.scene.add_object(polyhedron)
