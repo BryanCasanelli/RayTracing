@@ -4,6 +4,7 @@ from Scene import Scene
 from Polyhedron import Polyhedron
 from vispy import scene
 
+test = True
 class MainWindow(QMainWindow):
     def __init__(self):
         """
@@ -16,6 +17,11 @@ class MainWindow(QMainWindow):
 
         # Create a Scene instance
         self.scene = Scene()
+
+        # Test only, insert the cup and the cube into the scene
+        if test:
+            self.scene.add_object(Polyhedron("resources/obj/cup.obj"))
+            self.scene.add_object(Polyhedron("resources/obj/cube.obj"))
 
         # Create the author label
         self.author_label = QLabel("By Bryan Casanelli - bryancasanelli@gmail.com")
@@ -221,24 +227,24 @@ class ChangeReferencePointDialog(QDialog):
         self.x_spin_box = QDoubleSpinBox(self)
         self.x_spin_box.setDecimals(2)
         self.x_spin_box.setRange(-float('inf'), float('inf'))
-        self.x_spin_box.setMinimumWidth(20)
+        self.x_spin_box.setMinimumWidth(70)
 
         self.y_spin_box = QDoubleSpinBox(self)
         self.y_spin_box.setDecimals(2)
         self.y_spin_box.setRange(-float('inf'), float('inf'))
-        self.y_spin_box.setMinimumWidth(20)
+        self.y_spin_box.setMinimumWidth(70)
 
         self.z_spin_box = QDoubleSpinBox(self)
         self.z_spin_box.setDecimals(2)
         self.z_spin_box.setRange(-float('inf'), float('inf'))
-        self.z_spin_box.setMinimumWidth(20)
+        self.z_spin_box.setMinimumWidth(70)
 
         form_layout = QFormLayout()
-        form_layout.addRow("Reference type:", self.ref_type_combo_box)
-        form_layout.addRow("Axis:", self.axis_combo_box)
-        form_layout.addRow("X:", self.x_spin_box)
-        form_layout.addRow("Y:", self.y_spin_box)
-        form_layout.addRow("Z:", self.z_spin_box)
+        form_layout.addRow("Reference type :", self.ref_type_combo_box)
+        form_layout.addRow("Axis :", self.axis_combo_box)
+        form_layout.addRow("X [mm] :", self.x_spin_box)
+        form_layout.addRow("Y [mm] :", self.y_spin_box)
+        form_layout.addRow("Z [mm] :", self.z_spin_box)
 
         self.ok_button = QPushButton("OK", self)
         self.ok_button.clicked.connect(self.accept)
