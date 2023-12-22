@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout, QProgressBar
 from Scene import Scene
 from Polyhedron import Polyhedron
 from vispy import scene
@@ -57,6 +57,9 @@ class MainWindow(QMainWindow):
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
 
+        # Create the progress bar
+        self.progress_bar = QProgressBar()
+
         # Buttons pannel
         self.buttons_layout = QVBoxLayout()
         self.buttons_layout.setSpacing(1)
@@ -71,7 +74,8 @@ class MainWindow(QMainWindow):
         splitter1 = QSplitter(Qt.Vertical)
         splitter1.addWidget(self.buttons_widget)
         splitter1.addWidget(self.table_widget)
-        splitter1.setSizes([1, 10000])
+        splitter1.addWidget(self.progress_bar)
+        splitter1.setSizes([1, 10000, 1])
 
         # Left pannel + VisPy canvas
         splitter2 = QSplitter(Qt.Horizontal)
