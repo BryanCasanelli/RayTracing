@@ -16,6 +16,7 @@ class Polyhedron:
         vertices (list of Point): The vertices of the Polyhedron.
         face_indices (list of list of int): The indices of the vertices for each face.
         reference = self.vertices[0] if self.vertices else None
+        name (str): The name of the Polyhedron.
     """
 
     def __init__(self, source=None, material_path=None):
