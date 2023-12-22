@@ -311,14 +311,25 @@ class MoveObjectDialog(QDialog):
 
         self.setWindowTitle("Move object")
 
-        self.dx_spin_box = FormItem("dx", width = 30, parent=self)
-        self.dy_spin_box = FormItem("dy", width = 30, parent=self)
-        self.dz_spin_box = FormItem("dz", width = 30, parent=self)
-        self.spin_box_layout = QVBoxLayout()
-        self.spin_box_layout.setSpacing(1)
-        self.spin_box_layout.addWidget(self.dx_spin_box)
-        self.spin_box_layout.addWidget(self.dy_spin_box)
-        self.spin_box_layout.addWidget(self.dz_spin_box)
+        self.dx_spin_box = QDoubleSpinBox()
+        self.dx_spin_box.setDecimals(2)
+        self.dx_spin_box.setRange(-float('inf'), float('inf'))
+        self.dx_spin_box.setFixedWidth(70)
+
+        self.dy_spin_box = QDoubleSpinBox()
+        self.dy_spin_box.setDecimals(2)
+        self.dy_spin_box.setRange(-float('inf'), float('inf'))
+        self.dy_spin_box.setFixedWidth(70)
+
+        self.dz_spin_box = QDoubleSpinBox()
+        self.dz_spin_box.setDecimals(2)
+        self.dz_spin_box.setRange(-float('inf'), float('inf'))
+        self.dz_spin_box.setFixedWidth(70)
+
+        form_layout = QFormLayout()
+        form_layout.addRow("dx [mm] :", self.dx_spin_box)
+        form_layout.addRow("dy [mm] :", self.dy_spin_box)
+        form_layout.addRow("dz [mm] :", self.dz_spin_box)
 
         self.ok_button = QPushButton("OK", self)
         self.ok_button.clicked.connect(self.accept)
@@ -331,7 +342,7 @@ class MoveObjectDialog(QDialog):
         button_layout.addWidget(self.cancel_button)
 
         main_layout = QVBoxLayout(self)
-        main_layout.addLayout(self.spin_box_layout)
+        main_layout.addLayout(form_layout)
         main_layout.addLayout(button_layout)
 
         self.setLayout(main_layout)
@@ -345,49 +356,6 @@ class MoveObjectDialog(QDialog):
         """
         return float(self.dx_spin_box.value()), float(self.dy_spin_box.value()), float(self.dz_spin_box.value())
 
-class FormItem(QWidget):
-    def __init__(self, name, unit=None, width=50, min=-float('inf'), max=float('inf'), decimals=2, parent=None):
-        """
-        Initialize the RayTracing object.
-
-        Parameters:
-        - name (str): The name of the object.
-        - unit (str, optional): The unit of measurement for the object. Defaults to None.
-        - width (int, optional): The width of the label. Defaults to 50.
-        - min (float, optional): The minimum value for the spin box. Defaults to -inf.
-        - max (float, optional): The maximum value for the spin box. Defaults to inf.
-        - decimals (int, optional): The number of decimal places to display. Defaults to 2.
-        - parent (QWidget, optional): The parent widget. Defaults to None.
-        """
-        super().__init__(parent)
-
-        self.name = name
-        self.spin_box = QDoubleSpinBox(self)
-        self.spin_box.setDecimals(decimals)
-        self.spin_box.setMinimum(min)
-        self.spin_box.setMaximum(max)
-        self.spin_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-
-        label_text = f"{name} {unit}" if unit else f"{name}"
-        label = QLabel(label_text, self)
-        label.setFixedWidth(width)
-        label_colon = QLabel(":", self)
-        label_colon.setFixedWidth(10)
-
-        form_layout = QGridLayout()
-        form_layout.setSpacing(0)
-        form_layout.setContentsMargins(0, 0, 0, 0)
-        form_layout.addWidget(label, 0, 0)
-        form_layout.addWidget(label_colon, 0, 1)
-        form_layout.addWidget(self.spin_box, 0, 2)
-
-        self.setLayout(form_layout)
-
-    def value(self):
-        """
-        Returns the value of the spin box.
-        """
-        return self.spin_box.value()
 
 def main():
     """
