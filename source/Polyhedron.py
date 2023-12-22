@@ -19,7 +19,7 @@ class Polyhedron:
         name (str): The name of the Polyhedron.
     """
 
-    def __init__(self, source=None, material_path=None):
+    def __init__(self, source=None, material_path=None, progress_callback_function=None):
         """
         Initializes a new Polyhedron object. Can optionally be initialized from an OBJ file or a list of 
         TriangularPlanarPolygons and/or RectangularPlanarPolygons, and a material file path.
@@ -30,12 +30,15 @@ class Polyhedron:
                 If None, initializes an empty Polyhedron.
             material_path (str, optional): The path to the material file. If None, a vacuum material
                                            (with a refractive index of 1) is created by default.
+            progress_callback_function (function, optional): A callback function to track the progress of some methods.
+                                                    Default is None.
         """
         self.faces = []
         self.material = Material(material_path)
         self.vertices = []
         self.face_indices = []
         self.name = None
+        self.progress_callback_function = progress_callback_function
 
         if isinstance(source, str):
             self._parse_from_obj_file(source)
@@ -54,8 +57,16 @@ class Polyhedron:
         Args:
             filename (str): The path to the OBJ file.
         """
+        current_line = 0
         with open(filename, 'r') as file:
+            if self.progress_callback_function is not None:
+                total_lines = sum(1 for _ in file)
+                file.seek(0)
             for line in file:
+                current_line += 1
+                if self.progress_callback_function is not None:
+                    progress = current_line / total_lines * 100
+                    self.progress_callback_function(progress)
                 if line.startswith('v '):
                     parts = line.split()
                     point = Point(float(parts[1]), float(parts[2]), float(parts[3]))
