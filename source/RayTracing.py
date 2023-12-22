@@ -81,7 +81,8 @@ class MainWindow(QMainWindow):
 
         # All + author
         all_layout = QVBoxLayout()
-        all_layout.setSpacing(1)
+        all_layout.setSpacing(5)
+        all_layout.setContentsMargins(10, 10, 10, 5)
         all_layout.addWidget(splitter2)
         all_layout.addWidget(self.author_label)
         all_widget = QWidget()
