@@ -17,6 +17,11 @@ class MainWindow(QMainWindow):
         # Create a Scene instance
         self.scene = Scene()
 
+        # Create the author label
+        self.author_label = QLabel("By Bryan Casanelli - bryancasanelli@gmail.com")
+        self.author_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.author_label.setAlignment(Qt.AlignCenter)
+
         # Create the "Add object" button
         self.add_button = QPushButton("Add")
         self.add_button.clicked.connect(self.open_file_dialog)
@@ -62,14 +67,22 @@ class MainWindow(QMainWindow):
         splitter1.addWidget(self.table_widget)
         splitter1.setSizes([1, 10000])
 
-        # All
+        # Left pannel + VisPy canvas
         splitter2 = QSplitter(Qt.Horizontal)
         splitter2.addWidget(splitter1)
         splitter2.addWidget(self.vispy_canvas.native)
         splitter2.setSizes([1, 10000])
 
+        # All + author
+        all_layout = QVBoxLayout()
+        all_layout.setSpacing(1)
+        all_layout.addWidget(splitter2)
+        all_layout.addWidget(self.author_label)
+        all_widget = QWidget()
+        all_widget.setLayout(all_layout)
+
         # Set the splitter as the central widget
-        self.setCentralWidget(splitter2)
+        self.setCentralWidget(all_widget)
 
         # Update the state of the buttons
         self.update_buttons_state()
