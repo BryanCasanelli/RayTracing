@@ -197,11 +197,14 @@ class MainWindow(QMainWindow):
         """
         Opens a dialog to change the reference point.
         """
+        selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
         dialog = ChangeReferencePointDialog(self)
+        if len(selected_rows) == 1:
+                reference = self.scene.objects[selected_rows[0]].reference
+                dialog.set_default_values(reference.x, reference.y, reference.z)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             ref_type, axis, x, y, z = dialog.get_values()
-            selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
             for row in selected_rows:
                 # Change the reference point
                 self.scene.objects[row].change_reference_point(ref_type, axis, x, y, z)
@@ -215,6 +218,7 @@ class ChangeReferencePointDialog(QDialog):
 
     Methods:
         __init__(self, parent=None): Initializes the ChangeReferencePointDialog.
+        set_default_values(self, default_x, default_y, default_z): Sets the default values for the spin boxes.
         get_values(self): Returns the selected reference type and axis.
     """
     def __init__(self, parent=None):
@@ -269,6 +273,19 @@ class ChangeReferencePointDialog(QDialog):
 
         self.ref_type_combo_box.setCurrentIndex(1)
         self.ref_type_combo_box.setCurrentIndex(0)
+
+    def set_default_values(self, default_x, default_y, default_z):
+        """
+        Sets the default values for the spin boxes.
+
+        Args:
+            default_x (float): The default value for the x spin box.
+            default_y (float): The default value for the y spin box.
+            default_z (float): The default value for the z spin box.
+        """
+        self.x_spin_box.setValue(default_x)
+        self.y_spin_box.setValue(default_y)
+        self.z_spin_box.setValue(default_z)
 
     def get_values(self):
         """
