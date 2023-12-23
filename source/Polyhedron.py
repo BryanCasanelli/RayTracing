@@ -175,6 +175,15 @@ class Polyhedron:
         else:
             raise ValueError(f"Invalid reference type: {ref_type}")
     
+    def set_material(self, material_path):
+        """
+        Sets the material of the Polyhedron to a new Material object created from the given path.
+
+        Args:
+            material_path (str): The path to the material file.
+        """
+        self.material = Material(material_path)
+
     def __str__(self) -> str:
         """
         Returns a string representation of the Polyhedron, showing all points of each face.
