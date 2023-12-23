@@ -134,16 +134,20 @@ class Polyhedron:
             dy (float): The amount to translate in the y direction.
             dz (float): The amount to translate in the z direction.
         """
-        for vertex in self.vertices:
+        for i, vertex in enumerate(self.vertices):
             vertex.x += dx
             vertex.y += dy
             vertex.z += dz
+            if self.progress_callback_function != None:
+                self.progress_callback_function((i+1) / len(self.vertices) * 100)
 
-        for face in self.faces:
+        for i, face in enumerate(self.faces):
             for vertex in face.vertices:
                 vertex.x += dx
                 vertex.y += dy
                 vertex.z += dz
+            if self.progress_callback_function != None:
+                self.progress_callback_function((i+1) / len(self.faces) * 100)
 
     def change_reference_point(self, ref_type, axis, x=None, y=None, z=None):
         """
