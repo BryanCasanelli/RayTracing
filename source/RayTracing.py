@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout,
 from Scene import Scene
 from Polyhedron import Polyhedron
 from vispy import scene
+from pathlib import Path
 
 test = True
 class MainWindow(QMainWindow):
@@ -44,6 +45,10 @@ class MainWindow(QMainWindow):
         self.change_ref_button = QPushButton("Change reference point")
         self.change_ref_button.clicked.connect(self.change_reference_point)
 
+        # Add "select material" button
+        self.select_material_button = QPushButton("Select material")
+        self.select_material_button.clicked.connect(self.show_material_dialog)
+
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
         self.update_visualization()
@@ -51,8 +56,8 @@ class MainWindow(QMainWindow):
         # Create the table widget
         self.table_widget = QTableWidget()
         self.table_widget.itemSelectionChanged.connect(self.update_buttons_state)
-        self.table_widget.setColumnCount(7)
-        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]"])
+        self.table_widget.setColumnCount(8)
+        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]", "Material"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
@@ -67,6 +72,7 @@ class MainWindow(QMainWindow):
         self.buttons_layout.addWidget(self.delete_button)
         self.buttons_layout.addWidget(self.move_button)
         self.buttons_layout.addWidget(self.change_ref_button)
+        self.buttons_layout.addWidget(self.select_material_button)
         self.buttons_widget = QWidget()
         self.buttons_widget.setLayout(self.buttons_layout)
 
@@ -137,12 +143,13 @@ class MainWindow(QMainWindow):
             self.table_widget.setItem(row, 4, QTableWidgetItem(format(polyhedron.reference.x, '.2f')))
             self.table_widget.setItem(row, 5, QTableWidgetItem(format(polyhedron.reference.y, '.2f')))
             self.table_widget.setItem(row, 6, QTableWidgetItem(format(polyhedron.reference.z, '.2f')))
+            self.table_widget.setItem(row, 7, QTableWidgetItem(polyhedron.material.name))
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
         width = sum(self.table_widget.columnWidth(i) + 1 for i in range(self.table_widget.columnCount()))
         width += self.table_widget.verticalHeader().width()
         if self.table_widget.rowCount() > 0:
-            width += 12
+            width += 0
         self.table_widget.setMinimumWidth(width)
 
     def update(self):
@@ -172,10 +179,12 @@ class MainWindow(QMainWindow):
             self.delete_button.setEnabled(True)
             self.move_button.setEnabled(True)
             self.change_ref_button.setEnabled(True)
+            self.select_material_button.setEnabled(True)
         else:
             self.delete_button.setEnabled(False)
             self.move_button.setEnabled(False)
             self.change_ref_button.setEnabled(False)
+            self.select_material_button.setEnabled(False)
 
     def move_selected_object(self):
         """
@@ -211,6 +220,102 @@ class MainWindow(QMainWindow):
 
         # Update the visualization and the table
         self.update()
+    
+    def show_material_dialog(self):
+        """
+        Shows a dialog with a combo box to select the material for the selected rows of the table.
+        """
+        # Get the selected rows
+        selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
+        # Get the current material of the selected rows
+        current_material = set()
+        for row in selected_rows:
+            current_material.add(self.scene.objects[row].material.name)
+        if len(current_material) == 1:
+            current_material = current_material.pop()
+        else:
+            current_material = None
+        # Create the dialog
+        dialog = ChangeMaterialDialog(self, current_material)
+        # Show the dialog and get the selected material
+        if dialog.exec_() == QDialog.Accepted:
+            material_path = dialog.get_selected_material_path()
+            # Apply the material to the selected rows
+            for row in selected_rows:
+                self.scene.objects[row].set_material(material_path)
+            # Update the visualization and the table
+            self.update()
+
+class ChangeMaterialDialog(QDialog):
+    def __init__(self, parent = None, current_material = None):
+        super().__init__(parent)
+
+        # Set the window title
+        self.setWindowTitle("Select material")
+
+        # Create the combo box
+        self.combo_box = QComboBox()
+        self.combo_box.addItem("vacuum")
+
+        # Create the form layout
+        form_layout = QFormLayout()
+        form_layout.addRow("Material :", self.combo_box)
+
+        # Get the list of available materials
+        self.materials = self.get_available_materials()
+
+        # Add the materials to the combo box
+        for material in self.materials:
+            self.combo_box.addItem(material[0])
+
+        # Set the current material
+        if current_material is not None:
+            self.combo_box.setCurrentText(current_material)
+
+        # Create the OK and Cancel buttons
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        # Create the button layout
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+
+        # Create the main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+
+        # Set the main layout
+        self.setLayout(main_layout)
+
+    def get_available_materials(self):
+        """
+        Returns a list of available materials in the 'resources/materials' folder.
+
+        Returns:
+            list: A list of file vectors, where each file vector contains the stem and path of a material file.
+        """
+        material_folder = Path("resources/materials")
+        file_vectors = []
+        for file_path in material_folder.iterdir():
+            if file_path.is_file() and file_path.suffix == ".csv":
+                file_vector = [file_path.stem, str(file_path)]
+                file_vectors.append(file_vector)
+        return file_vectors
+
+    def get_selected_material_path(self):
+        """
+        Returns the path of the selected material.
+        
+        Returns:
+            str: The path of the selected material.
+        """
+        if self.combo_box.currentIndex() == 0:
+            return None
+        return self.materials[self.combo_box.currentIndex()-1][1]
 
 class ChangeReferencePointDialog(QDialog):
     """
