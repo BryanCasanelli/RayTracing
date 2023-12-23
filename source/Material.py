@@ -1,5 +1,6 @@
 import csv
 from scipy.interpolate import interp1d
+from pathlib import Path
 
 class Material:
     def __init__(self, file_path=None):
@@ -11,10 +12,12 @@ class Material:
                                        If None, a vacuum material is created.
         """
         if file_path:
+            self.name = Path(file_path).stem
             self.wavelengths, self.refractive_indices = self._read_data(file_path)
             self.real_interpolator = interp1d(self.wavelengths, [n.real for n in self.refractive_indices], kind='linear', fill_value="extrapolate")
             self.imag_interpolator = interp1d(self.wavelengths, [n.imag for n in self.refractive_indices], kind='linear', fill_value="extrapolate")
         else:
+            self.name = "vacuum"
             self.wavelengths = [0, float('inf')]  # Represents all wavelengths
             self.refractive_indices = [1, 1]  # Refractive index of vacuum is 1
 
