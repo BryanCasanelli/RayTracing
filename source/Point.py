@@ -8,18 +8,21 @@ class Point:
         z (float): The z-coordinate of the point.
     """
 
-    def __init__(self, x: float, y: float, z: float) -> None:
+    def __init__(self, x, y=None, z=None) -> None:
         """
         Initializes a new point with the specified x, y, and z coordinates.
 
         Args:
-            x (float): The x-coordinate of the point.
-            y (float): The y-coordinate of the point.
-            z (float): The z-coordinate of the point.
+            x (float or list/tuple): The x-coordinate of the point or a list/tuple of [x, y, z].
+            y (float, optional): The y-coordinate of the point. Not needed if x is a list/tuple.
+            z (float, optional): The z-coordinate of the point. Not needed if x is a list/tuple.
         """
-        self.x = x
-        self.y = y
-        self.z = z
+        if isinstance(x, (list, tuple)) and len(x) == 3:
+            self.x, self.y, self.z = x
+        else:
+            self.x = x
+            self.y = y
+            self.z = z
 
     def copy(self):
         """
