@@ -2,6 +2,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout, QProgressBar
 from Scene import Scene
 from Polyhedron import Polyhedron
+from Point import Point
+from Vector import Vector
 from vispy import scene
 from pathlib import Path
 
@@ -246,8 +248,7 @@ class MainWindow(QMainWindow):
             if selected_option == "3D object":
                 self.add_object()
             elif selected_option == "Light source":
-                #self.add_light_source()
-                pass
+                self.add_light_source()
             elif selected_option == "Camera":
                 #self.add_camera()
                 pass
@@ -270,6 +271,153 @@ class MainWindow(QMainWindow):
 
         # Update the visualization and the table
         self.update()
+
+    def add_light_source(self):
+        dialog = AddRaySourceDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle_vertices, mode, intensity = dialog.get_values()
+
+            # Update the visualization and the table if needed
+            self.update()
+
+class AddRaySourceDialog(QDialog):
+    """
+    A dialog window for adding a ray source.
+
+    This dialog allows the user to input various parameters for a ray source, such as the mode (point or rectangle),
+    origin, normal, aperture angle, wavelength range, intensity, and rectangle vertices.
+
+    The user can retrieve the values entered in the dialog using the `get_values` method.
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Add Ray Source")
+
+        # Input fields
+        self.mode_input = QComboBox(self)
+        self.mode_input.addItems(['point', 'rectangle'])
+        self.origin_x_input, self.origin_y_input, self.origin_z_input = [self._create_spin_box() for _ in range(3)]
+        self.normal_x_input, self.normal_y_input, self.normal_z_input = [self._create_spin_box() for _ in range(3)]
+        self.normal_x_input.setValue(1)
+        self.vertex_inputs = [[self._create_spin_box() for _ in range(3)] for _ in range(4)]  # 4 vertices, each with x, y, z
+        self.aperture_angle_input = QDoubleSpinBox(self)
+        self.aperture_angle_input.setRange(0, 360)
+        self.aperture_angle_input.setMinimumWidth(70)
+        self.min_wavelength_input = QDoubleSpinBox(self)
+        self.min_wavelength_input.setRange(380, 740)
+        self.min_wavelength_input.setMinimumWidth(70)
+        self.max_wavelength_input = QDoubleSpinBox(self)
+        self.max_wavelength_input.setRange(380, 740)
+        self.max_wavelength_input.setMinimumWidth(70)
+        self.intensity_input = QDoubleSpinBox(self)
+        self.intensity_input.setRange(0, 1)
+        self.intensity_input.setSingleStep(0.01)
+        self.intensity_input.setValue(1)
+        self.intensity_input.setMinimumWidth(70)
+
+        # OK and Cancel buttons
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        # Layouts
+        main_layout = QVBoxLayout(self)
+        form_layout = QHBoxLayout()
+        left_layout = QFormLayout()
+        right_layout = QFormLayout()
+
+        # Layout
+        left_layout.addRow("Mode :", self.mode_input)
+        left_layout.addRow("Origin X [mm] :", self.origin_x_input)
+        left_layout.addRow("Origin Y [mm] :", self.origin_y_input)
+        left_layout.addRow("Origin Z [mm] :", self.origin_z_input)
+        left_layout.addRow("Normal X [mm] :", self.normal_x_input)
+        left_layout.addRow("Normal Y [mm] :", self.normal_y_input)
+        left_layout.addRow("Normal Z [mm] :", self.normal_z_input)
+        left_layout.addRow("Aperture Angle [degrees] :", self.aperture_angle_input)
+        left_layout.addRow("Min Wavelength [nm] :", self.min_wavelength_input)
+        left_layout.addRow("Max Wavelength [nm] :", self.max_wavelength_input)
+        left_layout.addRow("Intensity :", self.intensity_input)
+
+        # Populate right layout with the rectangle vertex inputs
+        for i, vertex in enumerate(self.vertex_inputs):
+            for j, axis in enumerate(['X', 'Y', 'Z']):
+                right_layout.addRow(f"Rectangle vertex {i+1} {axis} [mm]:", vertex[j])
+
+        # Combine left and right layouts
+        form_layout.addLayout(left_layout)
+        form_layout.addLayout(right_layout)
+        main_layout.addLayout(form_layout)
+
+        # Button layout
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+
+        # Set main layout
+        main_layout.addLayout(button_layout)
+        self.setLayout(main_layout)
+
+        # Signals
+        self.mode_input.currentTextChanged.connect(self._update_vertex_input_state)
+        self._update_vertex_input_state(self.mode_input.currentText())
+
+    def _create_spin_box(self, min_val=-float('inf'), max_val=float('inf')):
+        """
+        Creates a QDoubleSpinBox widget with the specified minimum and maximum values.
+
+        Args:
+            min_val (float, optional): The minimum value for the spin box. Defaults to -inf.
+            max_val (float, optional): The maximum value for the spin box. Defaults to inf.
+
+        Returns:
+            QDoubleSpinBox: The created spin box widget.
+        """
+        spin_box = QDoubleSpinBox(self)
+        spin_box.setDecimals(2)
+        spin_box.setRange(min_val, max_val)
+        spin_box.setMinimumWidth(70)
+        return spin_box
+    
+    def _update_vertex_input_state(self, mode):
+        """
+        Update the state of the vertex input spin boxes based on the given mode.
+
+        Parameters:
+        - mode (str): The mode to determine the state of the spin boxes. If mode is 'rectangle', the spin boxes will be enabled. Otherwise, they will be disabled.
+        """
+        is_rectangle = mode == 'rectangle'
+        for vertex in self.vertex_inputs:
+            for spin_box in vertex:
+                spin_box.setEnabled(is_rectangle)
+
+    def get_values(self):
+            """
+            Get the values from the input fields and return them as a tuple.
+
+            Returns:
+                tuple: A tuple containing the following values:
+                    - origin (Point): The origin point.
+                    - normal (Vector): The normal vector.
+                    - aperture_angle (float): The aperture angle.
+                    - min_wavelength (float): The minimum wavelength.
+                    - max_wavelength (float): The maximum wavelength.
+                    - rectangle_vertices (list): A list of Point representing the vertices of a rectangle.
+                    - mode (str): The mode.
+                    - intensity (float): The intensity.
+            """
+            mode = self.mode_input.currentText()
+            origin = Point(self.origin_x_input.value(), self.origin_y_input.value(), self.origin_z_input.value())
+            normal = Vector(self.normal_x_input.value(), self.normal_y_input.value(), self.normal_z_input.value())
+            aperture_angle = self.aperture_angle_input.value()
+            min_wavelength = self.min_wavelength_input.value()
+            max_wavelength = self.max_wavelength_input.value()
+            rectangle_vertices = [Point([spin_box.value() for spin_box in vertex]) for vertex in self.vertex_inputs]
+            intensity = self.intensity_input.value()
+
+            return origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle_vertices, mode, intensity
+
 
 class AddDialog(QDialog):
     def __init__(self, parent=None):
