@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
 
         # Create the "Add object" button
         self.add_button = QPushButton("Add")
-        self.add_button.clicked.connect(self.open_file_dialog)
+        self.add_button.clicked.connect(self.show_add_dialog)
 
         # Create the "Delete object" button
         self.delete_button = QPushButton("Delete")
@@ -103,25 +103,6 @@ class MainWindow(QMainWindow):
 
         # Update the state of the buttons
         self.update_buttons_state()
-
-    def open_file_dialog(self):
-        """
-        Opens a file dialog to select an OBJ file.
-
-        Returns:
-            str: The selected file name.
-        """
-        file_names, _ = QFileDialog.getOpenFileNames(self, "QFileDialog.getOpenFileNames()", "resources/obj", "OBJ Files (*.obj)")
-        for file_name in file_names:
-            if file_name:
-                # Create a new Polyhedron from the OBJ file
-                polyhedron = Polyhedron(file_name, progress_callback_function = lambda x: self.progress_bar.setValue(int(x)))
-                
-                # Add the Polyhedron to the Scene
-                self.scene.add_object(polyhedron)
-
-        # Update the visualization and the table
-        self.update()
 
     def update_visualization(self):
         """
@@ -245,6 +226,92 @@ class MainWindow(QMainWindow):
                 self.scene.objects[row].set_material(material_path)
             # Update the visualization and the table
             self.update()
+
+    def show_add_dialog(self):
+        """
+        Shows a dialog with a combo box to select an option ("3D object", "Light source", or "Camera").
+        """
+        # Create the dialog
+        dialog = AddDialog(self)
+
+        # Show the dialog and get the result
+        result = dialog.exec_()
+
+        # If the OK button was clicked
+        if result == QDialog.Accepted:
+            # Get the selected option
+            selected_option = dialog.get_current_text()
+
+            # Handle the selected option
+            if selected_option == "3D object":
+                self.add_object()
+            elif selected_option == "Light source":
+                #self.add_light_source()
+                pass
+            elif selected_option == "Camera":
+                #self.add_camera()
+                pass
+
+    def add_object(self):
+        """
+        Opens a file dialog to select an OBJ file.
+
+        Returns:
+            str: The selected file name.
+        """
+        file_names, _ = QFileDialog.getOpenFileNames(self, "QFileDialog.getOpenFileNames()", "resources/obj", "OBJ Files (*.obj)")
+        for file_name in file_names:
+            if file_name:
+                # Create a new Polyhedron from the OBJ file
+                polyhedron = Polyhedron(file_name, progress_callback_function = lambda x: self.progress_bar.setValue(int(x)))
+                
+                # Add the Polyhedron to the Scene
+                self.scene.add_object(polyhedron)
+
+        # Update the visualization and the table
+        self.update()
+
+class AddDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Set the window title
+        self.setWindowTitle("Select option")
+
+        # Create the combo box
+        self.combo_box = QComboBox()
+        self.combo_box.addItem("3D object")
+        self.combo_box.addItem("Light source")
+        self.combo_box.addItem("Camera")
+
+        # Create the form layout
+        form_layout = QFormLayout()
+        form_layout.addRow("Option :", self.combo_box)
+
+        # Create the OK and Cancel buttons
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        # Create the button layout
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+
+        # Create the main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+
+        # Set the main layout
+        self.setLayout(main_layout)
+
+    def get_current_text(self):
+        """
+        Returns the current text of the combo box.
+        """
+        return self.combo_box.currentText()
 
 class ChangeMaterialDialog(QDialog):
     def __init__(self, parent = None, current_material = None):
