@@ -1,7 +1,7 @@
 from Point import Point
 from Ray import Ray
 from Vector import Vector
-from RectangularPlanarPolygon import RectangularPlanarPolygon
+from Polyhedron import Polyhedron
 import numpy as np
 
 class RaySource:
@@ -10,7 +10,6 @@ class RaySource:
     with both modes using a given direction and aperture angle.
 
     Attributes:
-        origin (Point): The origin point for the ray (used for point mode).
         normal (Vector): The normal vector indicating the direction of the ray.
         aperture_angle (float): The aperture angle in radians, used for defining the spread of the ray.
         rectangle (RectangularPlanarPolygon): The rectangular area from which to generate rays (used for rectangle mode).
@@ -20,12 +19,12 @@ class RaySource:
         intensity (float): The intensity of the ray.
     """
 
-    def __init__(self, origin: Point, normal: Vector, aperture_angle_grades: float, min_wavelength=380, max_wavelength=740, rectangle=None, mode='rectangle', intensity = 1.0):
+    def __init__(self, reference: Point, normal: Vector, aperture_angle_grades: float, min_wavelength=380, max_wavelength=740, rectangle=None, mode='rectangle', intensity = 1.0, name  = ""):
         """
         Initializes the RaySource with specified parameters.
 
         Args:
-            origin (Point): The origin point of the ray (for point mode).
+            reference (Point): The origin point of the ray (for point mode).
             normal (Vector): The normal vector indicating the direction of the ray.
             aperture_angle_grades (float): The aperture angle in grades (converted to radians).
             min_wavelength (float): The minimum wavelength, default is 380 nm.
@@ -33,8 +32,8 @@ class RaySource:
             rectangle (RectangularPlanarPolygon, optional): The rectangular area for ray generation (for rectangle mode).
             mode (str, optional): The mode of ray generation ('point' or 'rectangle'), default is 'point'.
             intensity (float): The intensity of the ray.
+            name (str, optional): The name of the RaySource.
         """
-        self.origin = origin
         self.normal = normal
         self.aperture_angle = np.radians(aperture_angle_grades)  # Convert grades to radians
         self.min_wavelength = min_wavelength
@@ -42,6 +41,63 @@ class RaySource:
         self.rectangle = rectangle
         self.mode = mode if rectangle else 'point'
         self.intensity = intensity
+        self.name = name
+        self.associated_polyhedron = self._initialize_associated_polyhedron(mode, reference, rectangle, name)
+
+    def _initialize_associated_polyhedron(self, mode, origin, rectangle, name):
+        """
+        Initializes an associated Polyhedron object based on the mode and origin or rectangle.
+
+        Args:
+            mode (str): The mode ('point' or 'rectangle').
+            origin (Point): The origin for the 'point' mode.
+            rectangle (RectangularPlanarPolygon): The rectangle for the 'rectangle' mode.
+            name (str): The name of the associated Polyhedron.
+
+        Returns:
+            Polyhedron: An associated Polyhedron object.
+        """
+        if mode == 'point':
+            associated_polyhedron = Polyhedron()
+            associated_polyhedron.reference = origin
+        elif mode == 'rectangle':
+            associated_polyhedron = Polyhedron([rectangle])
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
+        associated_polyhedron.name = name
+        return associated_polyhedron
+
+    @property
+    def faces(self):
+        return self.associated_polyhedron.faces
+
+    @property
+    def material(self):
+        return self.associated_polyhedron.material
+
+    @property
+    def vertices(self):
+        return self.associated_polyhedron.vertices
+
+    @property
+    def face_indices(self):
+        return self.associated_polyhedron.face_indices
+
+    @property
+    def reference(self):
+        return self.associated_polyhedron.reference
+
+    @property
+    def translate(self):
+        return self.associated_polyhedron.translate
+
+    @property
+    def change_reference_point(self):
+        return self.associated_polyhedron.change_reference_point
+
+    @property
+    def set_material(self):
+        return self.associated_polyhedron.set_material
 
     def _random_vector_in_cone(self) -> Vector:
         """
@@ -90,7 +146,7 @@ class RaySource:
         direction = self._random_vector_in_cone()
 
         if self.mode == 'point':
-            origin = self.origin
+            origin = self.reference
         elif self.mode == 'rectangle':
             origin = self._random_point_in_rectangle()
 
@@ -103,7 +159,7 @@ class RaySource:
         Returns:
             str: The string representation of the RaySource.
         """
-        origin_str = f"Origin: ({self.origin.x}, {self.origin.y}, {self.origin.z})"
+        origin_str = f"Origin: ({self.reference.x}, {self.reference.y}, {self.reference.z})"
         normal_str = f"Normal: ({self.normal.x}, {self.normal.y}, {self.normal.z})"
         mode_str = f"Mode: {self.mode}"
         aperture_angle_str = f"Aperture Angle: {self.aperture_angle} radians"
