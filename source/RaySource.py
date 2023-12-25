@@ -62,6 +62,7 @@ class RaySource:
             associated_polyhedron.reference = origin
         elif mode == 'rectangle':
             associated_polyhedron = Polyhedron([rectangle])
+            associated_polyhedron.reference = rectangle.centroid()
         else:
             raise ValueError(f"Unknown mode: {mode}")
         associated_polyhedron.name = name
