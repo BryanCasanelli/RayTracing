@@ -27,6 +27,18 @@ class TriangularPlanarPolygon:
         self.vertices = points
         self.normal = self._calculate_normal()
 
+    def centroid(self) -> Point:
+        """
+        Calculates the centroid (middle point) of the triangle.
+
+        Returns:
+            Point: The centroid of the triangle.
+        """
+        x = (self.vertices[0].x + self.vertices[1].x + self.vertices[2].x) / 3
+        y = (self.vertices[0].y + self.vertices[1].y + self.vertices[2].y) / 3
+        z = (self.vertices[0].z + self.vertices[1].z + self.vertices[2].z) / 3
+        return Point(x, y, z)
+
     def get_vertices(self) -> list:
         """
         Returns the vertices of the triangle as an array of Point objects.

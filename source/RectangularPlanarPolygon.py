@@ -1,4 +1,5 @@
 from TriangularPlanarPolygon import TriangularPlanarPolygon
+from Point import Point
 import numpy as np
 
 class RectangularPlanarPolygon:
@@ -26,6 +27,18 @@ class RectangularPlanarPolygon:
         self.triangle1 = TriangularPlanarPolygon([vertices[0], vertices[1], vertices[2]])
         self.triangle2 = TriangularPlanarPolygon([vertices[2], vertices[3], vertices[0]])
         self.normal = self.triangle1.normal  # Using the normal from the first triangle
+
+    def centroid(self) -> Point:
+        """
+        Calculates the centroid (middle point) of the rectangle.
+
+        Returns:
+            Point: The centroid of the rectangle.
+        """
+        x = (self.vertices[0].x + self.vertices[1].x + self.vertices[2].x + self.vertices[3].x) / 4
+        y = (self.vertices[0].y + self.vertices[1].y + self.vertices[2].y + self.vertices[3].y) / 4
+        z = (self.vertices[0].z + self.vertices[1].z + self.vertices[2].z + self.vertices[3].z) / 4
+        return Point(x, y, z)
 
     def get_vertices(self):
         """
