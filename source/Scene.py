@@ -86,11 +86,11 @@ class Scene:
         # Add each Polyhedron to the scene
         for obj in self.objects:
 
-            # Get the vertices and face indices of the Polyhedron
+            # Get the vertices and face indices of the object
             vertices = np.array([vertex.get_coordinates() for vertex in obj.vertices])
             faces = np.array(obj.face_indices)
 
-            if len(faces) > 0:  # Not all polyhedrons have faces, e.g. Point RaySource
+            if len(faces) > 0:  # Not all polyhedrons/associated Polyhedron have faces, e.g. Point RaySource
                 # Create a colored `MeshVisual` using the vertices and faces
                 face_colors = np.tile((0.5, 0.0, 0.5, 1.0), (len(faces), 1))
                 mesh = scene.visuals.Mesh(
@@ -109,10 +109,23 @@ class Scene:
                 shading_filter.light_dir = light_dir[:3]
                 view.camera.transform.imap(light_dir)
 
-            # Add a marker at the position of the Polyhedron
+            # Add a marker at the position of the Polyhedron / associated Polyhedron
             position_marker = scene.visuals.Markers()
             position_marker.set_data(np.array([obj.reference.get_coordinates()]), face_color='yellow', size=10)
             view.add(position_marker)
+
+            # Check if the object is an instance of RaySource and display its normal
+            if isinstance(obj, RaySource):
+                # Calculate the endpoint of the normal vector
+                normal_end = np.array(obj.reference.get_coordinates()) + np.array(obj.normal.get_coordinates())
+                
+                # Create a line visual for the normal vector
+                normal_line = scene.visuals.Line(
+                    pos=np.array([obj.reference.get_coordinates(), normal_end]), 
+                    color='cyan', 
+                    width=2
+                )
+                view.add(normal_line)
 
         # Add coordinate axes to the scene
         length = 1e20
