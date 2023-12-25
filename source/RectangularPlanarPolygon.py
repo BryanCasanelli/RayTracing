@@ -6,25 +6,25 @@ class RectangularPlanarPolygon:
     Represents a rectangular planar polygon, defined by two triangular faces.
 
     Attributes:
-        points (list of Point): The four points defining the rectangle.
+        vertices (list of Point): The four vertices defining the rectangle.
         triangle1 (TriangularPlanarPolygon): The first triangular part of the rectangle.
         triangle2 (TriangularPlanarPolygon): The second triangular part of the rectangle.
         normal (Vector): The normal vector of the rectangle's plane.
     """
 
-    def __init__(self, points: list):
+    def __init__(self, vertices: list):
         """
-        Initializes a RectangularPlanarPolygon with four specified points, creates two triangular faces, and calculates the normal.
+        Initializes a RectangularPlanarPolygon with four specified vertices, creates two triangular faces, and calculates the normal.
 
         Args:
-            points (list of Point): A list containing four Point objects representing the vertices of the rectangle.
+            vertices (list of Point): A list containing four Point objects representing the vertices of the rectangle.
         """
-        if len(points) != 4:
-            raise ValueError("A RectangularPlanarPolygon must be initialized with exactly four points.")
+        if len(vertices) != 4:
+            raise ValueError("A RectangularPlanarPolygon must be initialized with exactly four vertices.")
 
-        self.points = points
-        self.triangle1 = TriangularPlanarPolygon([points[0], points[1], points[2]])
-        self.triangle2 = TriangularPlanarPolygon([points[2], points[3], points[0]])
+        self.vertices = vertices
+        self.triangle1 = TriangularPlanarPolygon([vertices[0], vertices[1], vertices[2]])
+        self.triangle2 = TriangularPlanarPolygon([vertices[2], vertices[3], vertices[0]])
         self.normal = self.triangle1.normal  # Using the normal from the first triangle
 
     def get_vertices(self):
@@ -34,7 +34,7 @@ class RectangularPlanarPolygon:
         Returns:
             list: A list containing all the vertices of the rectangular polygon.
         """
-        return self.points
+        return self.vertices
 
     def random_point_inside(self):
         """
@@ -56,6 +56,6 @@ class RectangularPlanarPolygon:
         Returns:
             str: The string representation of the RectangularPlanarPolygon.
         """
-        point_coords = ', '.join(f"({p.x}, {p.y}, {p.z})" for p in self.points)
+        vertex_coords = ', '.join(f"({v.x}, {v.y}, {v.z})" for v in self.vertices)
         normal_coords = f"({self.normal.x}, {self.normal.y}, {self.normal.z})"
-        return f"RectangularPlanarPolygon(Points: [{point_coords}], Normal: {normal_coords})"
+        return f"RectangularPlanarPolygon(Vertices: [{vertex_coords}], Normal: {normal_coords})"
