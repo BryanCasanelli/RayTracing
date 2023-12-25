@@ -30,6 +30,15 @@ class Vector:
         """
         return np.sqrt(self.x**2 + self.y**2 + self.z**2)
 
+    def get_coordinates(self) -> tuple:
+        """
+        Returns a tuple containing the x, y, and z coordinates of the vector.
+
+        Returns:
+            tuple: A tuple containing the x, y, and z coordinates of the vector.
+        """
+        return (self.x, self.y, self.z)
+
     def normalize(self):
         """
         Normalizes the vector (makes it a unit vector).
