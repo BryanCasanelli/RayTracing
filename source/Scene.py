@@ -85,12 +85,12 @@ class Scene:
 
         # Add each Polyhedron to the scene
         for obj in self.objects:
-            if isinstance(obj, Polyhedron):
 
-                # Get the vertices and face indices of the Polyhedron
-                vertices = np.array([vertex.get_coordinates() for vertex in obj.vertices])
-                faces = np.array(obj.face_indices)
+            # Get the vertices and face indices of the Polyhedron
+            vertices = np.array([vertex.get_coordinates() for vertex in obj.vertices])
+            faces = np.array(obj.face_indices)
 
+            if len(faces) > 0:  # Not all polyhedrons have faces, e.g. Point RaySource
                 # Create a colored `MeshVisual` using the vertices and faces
                 face_colors = np.tile((0.5, 0.0, 0.5, 1.0), (len(faces), 1))
                 mesh = scene.visuals.Mesh(
@@ -109,10 +109,10 @@ class Scene:
                 shading_filter.light_dir = light_dir[:3]
                 view.camera.transform.imap(light_dir)
 
-                # Add a marker at the position of the Polyhedron
-                position_marker = scene.visuals.Markers()
-                position_marker.set_data(np.array([obj.reference.get_coordinates()]), face_color='yellow', size=10)
-                view.add(position_marker)
+            # Add a marker at the position of the Polyhedron
+            position_marker = scene.visuals.Markers()
+            position_marker.set_data(np.array([obj.reference.get_coordinates()]), face_color='yellow', size=10)
+            view.add(position_marker)
 
         # Add coordinate axes to the scene
         length = 1e20
@@ -151,7 +151,7 @@ class Scene:
             elif isinstance(obj, RectangularPlanarPolygon):
                 object_descriptions.append("RectangularPlanarPolygon")
             elif isinstance(obj, RaySource):
-                object_descriptions.append(f"RaySource at {obj.origin} with aperture angle {obj.aperture_angle}")
+                object_descriptions.append(f"RaySource at {obj.reference} with aperture angle {obj.aperture_angle}")
 
         scene_description = '; '.join(object_descriptions)
         return f"Scene(Objects: {scene_description})"
