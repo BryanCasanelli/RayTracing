@@ -4,6 +4,8 @@ from Scene import Scene
 from Polyhedron import Polyhedron
 from Point import Point
 from Vector import Vector
+from RaySource import RaySource
+from RectangularPlanarPolygon import RectangularPlanarPolygon
 from vispy import scene
 from pathlib import Path
 
@@ -58,8 +60,8 @@ class MainWindow(QMainWindow):
         # Create the table widget
         self.table_widget = QTableWidget()
         self.table_widget.itemSelectionChanged.connect(self.update_buttons_state)
-        self.table_widget.setColumnCount(8)
-        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]", "Material"])
+        self.table_widget.setColumnCount(11)
+        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]", "Material", "Nx [mm]", "Ny [mm]", "Nz [mm]"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
@@ -126,7 +128,16 @@ class MainWindow(QMainWindow):
             self.table_widget.setItem(row, 4, QTableWidgetItem(format(polyhedron.reference.x, '.2f')))
             self.table_widget.setItem(row, 5, QTableWidgetItem(format(polyhedron.reference.y, '.2f')))
             self.table_widget.setItem(row, 6, QTableWidgetItem(format(polyhedron.reference.z, '.2f')))
-            self.table_widget.setItem(row, 7, QTableWidgetItem(polyhedron.material.name))
+            if isinstance(polyhedron, Polyhedron):
+                self.table_widget.setItem(row, 7, QTableWidgetItem(polyhedron.material.name))
+                self.table_widget.setItem(row, 8, QTableWidgetItem("---"))
+                self.table_widget.setItem(row, 9, QTableWidgetItem("---"))
+                self.table_widget.setItem(row, 10, QTableWidgetItem("---"))
+            else:
+                self.table_widget.setItem(row, 7, QTableWidgetItem("---"))
+                self.table_widget.setItem(row, 8, QTableWidgetItem(format(polyhedron.normal.x, '.2f')))
+                self.table_widget.setItem(row, 9, QTableWidgetItem(format(polyhedron.normal.x, '.2f')))
+                self.table_widget.setItem(row, 10, QTableWidgetItem(format(polyhedron.normal.x, '.2f')))
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
         width = sum(self.table_widget.columnWidth(i) + 1 for i in range(self.table_widget.columnCount()))
@@ -162,7 +173,16 @@ class MainWindow(QMainWindow):
             self.delete_button.setEnabled(True)
             self.move_button.setEnabled(True)
             self.change_ref_button.setEnabled(True)
-            self.select_material_button.setEnabled(True)
+            
+            # Check if any selected item is not a Polyhedron
+            selected_rows = set(index.row() for index in self.table_widget.selectedIndexes())
+            non_polyhedron_selected = any(not isinstance(self.scene.objects[row], Polyhedron) for row in selected_rows)
+            
+            # Special case for non-polyhedron objects
+            if non_polyhedron_selected:
+                self.select_material_button.setEnabled(False)
+            else:
+                self.select_material_button.setEnabled(True)
         else:
             self.delete_button.setEnabled(False)
             self.move_button.setEnabled(False)
@@ -248,7 +268,7 @@ class MainWindow(QMainWindow):
             if selected_option == "3D object":
                 self.add_object()
             elif selected_option == "Light source":
-                self.add_light_source()
+                self.add_ray_source()
             elif selected_option == "Camera":
                 #self.add_camera()
                 pass
@@ -272,12 +292,26 @@ class MainWindow(QMainWindow):
         # Update the visualization and the table
         self.update()
 
-    def add_light_source(self):
+    def add_ray_source(self):
+        """
+        Adds a light source to the scene.
+
+        This method opens a dialog to get the values for the light source, creates a new RaySource object
+        with the provided values, and adds it to the scene. It then updates the visualization and the table.
+        """
         dialog = AddRaySourceDialog(self)
         if dialog.exec_() == QDialog.Accepted:
-            origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle_vertices, mode, intensity = dialog.get_values()
-
-            # Update the visualization and the table if needed
+            # Get the values from the dialog
+            origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle, mode, intensity = dialog.get_values()
+            # Count the existing RaySource objects in the scene
+            ray_source_count = sum(1 for obj in self.scene.objects if isinstance(obj, RaySource))
+            # Generate a unique name for the new RaySource
+            ray_source_name = f"{mode.capitalize()} Source {ray_source_count + 1}"
+            # Create a new RaySource
+            source = RaySource(origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle, mode, intensity, ray_source_name)
+            # Add the RaySource to the Scene
+            self.scene.add_object(source)
+            # Update the visualization and the table
             self.update()
 
 class AddRaySourceDialog(QDialog):
@@ -300,6 +334,10 @@ class AddRaySourceDialog(QDialog):
         self.normal_x_input, self.normal_y_input, self.normal_z_input = [self._create_spin_box() for _ in range(3)]
         self.normal_x_input.setValue(1)
         self.vertex_inputs = [[self._create_spin_box() for _ in range(3)] for _ in range(4)]  # 4 vertices, each with x, y, z
+        self.vertex_inputs[1][0].setValue(1)
+        self.vertex_inputs[2][0].setValue(1)
+        self.vertex_inputs[2][1].setValue(1)
+        self.vertex_inputs[3][1].setValue(1)
         self.aperture_angle_input = QDoubleSpinBox(self)
         self.aperture_angle_input.setRange(0, 360)
         self.aperture_angle_input.setMinimumWidth(70)
@@ -413,10 +451,10 @@ class AddRaySourceDialog(QDialog):
             aperture_angle = self.aperture_angle_input.value()
             min_wavelength = self.min_wavelength_input.value()
             max_wavelength = self.max_wavelength_input.value()
-            rectangle_vertices = [Point([spin_box.value() for spin_box in vertex]) for vertex in self.vertex_inputs]
+            rectangle = RectangularPlanarPolygon([Point([spin_box.value() for spin_box in vertex]) for vertex in self.vertex_inputs])
             intensity = self.intensity_input.value()
 
-            return origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle_vertices, mode, intensity
+            return origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle, mode, intensity
 
 
 class AddDialog(QDialog):
