@@ -332,7 +332,7 @@ class AddRaySourceDialog(QDialog):
         self.mode_input.addItems(['point', 'rectangle'])
         self.origin_x_input, self.origin_y_input, self.origin_z_input = [self._create_spin_box() for _ in range(3)]
         self.normal_x_input, self.normal_y_input, self.normal_z_input = [self._create_spin_box() for _ in range(3)]
-        self.normal_x_input.setValue(1)
+        self.normal_z_input.setValue(1)
         self.vertex_inputs = [[self._create_spin_box() for _ in range(3)] for _ in range(4)]  # 4 vertices, each with x, y, z
         self.vertex_inputs[1][0].setValue(1)
         self.vertex_inputs[2][0].setValue(1)
