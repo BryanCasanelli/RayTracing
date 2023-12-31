@@ -1,21 +1,16 @@
 # RayTracing
-RayTracing is a software that aims to accomplish two main objectives: visualizing ray trajectories and generating 3D image renders.
 
-## Features (still working on!)
+This is a forward raytracing simulator that provides a powerful tool to visualize the path of rays as they interact with objects in a 3D scene. This feature allows users to gain insights into how light rays behave and interact with different materials.
 
-- Ray Trajectory Visualization: RayTracing provides a powerful tool to visualize the path of rays as they interact with objects in a 3D scene. This feature allows users to gain insights into how light rays behave and interact with different materials.
+# Launch Instructions
 
-- 3D Image Rendering: In addition to ray trajectory visualization, RayTracing offers the capability to generate high-quality 3D image renders. By simulating the behavior of light rays, the software can produce realistic and visually appealing images of 3D scenes.
-
-## Launch Instructions
-
-### Windows
+## Windows
 To launch RayTracing on Windows, follow these steps:
 1. Open a command prompt.
 2. Navigate to the directory where RayTracing.bat is located.
 3. Run the following command: `RayTracing.bat`
 
-### Linux and Mac
+## Linux and Mac
 To launch RayTracing on Mac, follow these steps:
 1. Open a terminal.
 2. Navigate to the directory where RayTracing.sh is located.
