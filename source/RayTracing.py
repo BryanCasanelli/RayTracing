@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout, QProgressBar
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout, QProgressBar, QCheckBox
 from Scene import Scene
 from Polyhedron import Polyhedron
 from Point import Point
@@ -25,8 +25,7 @@ class MainWindow(QMainWindow):
 
         # Test only, insert the cup and the cube into the scene
         if test:
-            self.scene.add_object(Polyhedron("resources/obj/cup.obj"))
-            self.scene.add_object(Polyhedron("resources/obj/cube.obj"))
+            self.scene.add_object(Polyhedron("resources/obj/sphere.obj"))
 
         # Create the author label
         self.author_label = QLabel("By Bryan Casanelli - bryancasanelli@gmail.com")
@@ -52,6 +51,11 @@ class MainWindow(QMainWindow):
         # Add "select material" button
         self.select_material_button = QPushButton("Select material")
         self.select_material_button.clicked.connect(self.show_material_dialog)
+
+        # Create the show/hide polyhedrons button
+        self.show_polyhedrons = QCheckBox("Show polyhedrons")
+        self.show_polyhedrons.setChecked(True)
+        self.show_polyhedrons.stateChanged.connect(self.update_visualization)
 
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
@@ -80,6 +84,14 @@ class MainWindow(QMainWindow):
         self.buttons_widget = QWidget()
         self.buttons_widget.setLayout(self.buttons_layout)
 
+        # Upper pannel
+        self.plot_buttons_layout = QHBoxLayout()
+        self.plot_buttons_layout.addWidget(self.show_polyhedrons)
+        self.plot_buttons_layout.addStretch()
+        self.plot_buttons_layout.setContentsMargins(0, 0, 0, 0)
+        self.plot_buttons_widget = QWidget()
+        self.plot_buttons_widget.setLayout(self.plot_buttons_layout)
+
         # Left pannel
         splitter1 = QSplitter(Qt.Vertical)
         splitter1.addWidget(self.buttons_widget)
@@ -87,17 +99,23 @@ class MainWindow(QMainWindow):
         splitter1.addWidget(self.progress_bar)
         splitter1.setSizes([1, 10000, 1])
 
-        # Left pannel + VisPy canvas
-        splitter2 = QSplitter(Qt.Horizontal)
-        splitter2.addWidget(splitter1)
+        # Upper pannel + VisPy canvas
+        splitter2 = QSplitter(Qt.Vertical)
+        splitter2.addWidget(self.plot_buttons_widget)
         splitter2.addWidget(self.vispy_canvas.native)
         splitter2.setSizes([1, 10000])
+
+        # Left pannel + VisPy canvas and plot buttons
+        splitter3 = QSplitter(Qt.Horizontal)
+        splitter3.addWidget(splitter1)
+        splitter3.addWidget(splitter2)
+        splitter3.setSizes([1, 10000])
 
         # All + author
         all_layout = QVBoxLayout()
         all_layout.setSpacing(5)
         all_layout.setContentsMargins(10, 10, 10, 5)
-        all_layout.addWidget(splitter2)
+        all_layout.addWidget(splitter3)
         all_layout.addWidget(self.author_label)
         all_widget = QWidget()
         all_widget.setLayout(all_layout)
@@ -112,7 +130,8 @@ class MainWindow(QMainWindow):
         """
         Updates the visualization of the scene in the VisPy canvas.
         """
-        self.scene.vispy_display(self.vispy_canvas)
+        show_polyhedrons = self.show_polyhedrons.isChecked()
+        self.scene.vispy_display(self.vispy_canvas, show_polyhedrons)
 
     def update_table(self):
         """
