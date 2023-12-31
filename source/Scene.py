@@ -22,7 +22,7 @@ class Scene:
         Initializes a new Scene object.
         """
         self.objects = []
-        self._camera_parameters = None
+        self._camera_parameters = {'center': (0, 0, 0),'elevation': 30,'azimuth': 120} # Default camera parameters
         
 
     def add_object(self, object):
@@ -76,9 +76,8 @@ class Scene:
         view.camera.fov = 0
         view.camera.scale_factor = 300
 
-        # Restore the camera parameters if they have been saved
-        if self._camera_parameters is not None:
-            view.camera.set_state(self._camera_parameters)
+        # Restore the camera parameters
+        view.camera.set_state(self._camera_parameters)
 
         # Connect the callback to the transform_updated event
         view.camera.events.transform_change.connect(self._save_camera_parameters)
@@ -105,7 +104,7 @@ class Scene:
                 mesh.attach(shading_filter)
 
                 # Attach headlight to the scene
-                light_dir = (0, 1, 0, 0)
+                light_dir = (-1, -1, 0, 0)
                 shading_filter.light_dir = light_dir[:3]
                 view.camera.transform.imap(light_dir)
 
