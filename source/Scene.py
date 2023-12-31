@@ -55,12 +55,14 @@ class Scene:
         if index >= 0 and index < len(self.objects):
             del self.objects[index]
 
-    def vispy_display(self, canvas):
+    def vispy_display(self, canvas, show_polyhedrons=True):
         """
         Shows the faces of each Polyhedron as a mesh surface using VisPy.
 
         Args:
             canvas (VisPy canvas): The VisPy canvas to display the scene.
+            show_polyhedrons (bool, optional): Flag to indicate whether to show Polyhedrons or not. 
+                                                Defaults to True.
 
         """
 
@@ -84,6 +86,9 @@ class Scene:
 
         # Add each Polyhedron to the scene
         for obj in self.objects:
+
+            if not show_polyhedrons and isinstance(obj, Polyhedron):
+                continue
 
             # Get the vertices and face indices of the object
             vertices = np.array([vertex.get_coordinates() for vertex in obj.vertices])
