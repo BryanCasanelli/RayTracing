@@ -70,6 +70,10 @@ class MainWindow(QMainWindow):
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
 
+        # Create the simulation button
+        self.simulate_button = QPushButton("Simulate")
+        self.simulate_button.clicked.connect(self.simulate)
+
         # Create the progress bar
         self.progress_bar = QProgressBar()
 
@@ -96,7 +100,7 @@ class MainWindow(QMainWindow):
         splitter1 = QSplitter(Qt.Vertical)
         splitter1.addWidget(self.buttons_widget)
         splitter1.addWidget(self.table_widget)
-        splitter1.addWidget(self.progress_bar)
+        splitter1.addWidget(self.simulate_button)
         splitter1.setSizes([1, 10000, 1])
 
         # Upper pannel + VisPy canvas
@@ -333,6 +337,13 @@ class MainWindow(QMainWindow):
             # Update the visualization and the table
             self.update()
 
+    def simulate(self):
+        """
+        Simulates the scene by tracing the rays from the light sources and calculating the intensity of each ray.
+        """
+        self.scene.simulate(10)
+        self.update_visualization()
+
 class AddRaySourceDialog(QDialog):
     """
     A dialog window for adding a ray source.
@@ -362,9 +373,11 @@ class AddRaySourceDialog(QDialog):
         self.aperture_angle_input.setMinimumWidth(70)
         self.min_wavelength_input = QDoubleSpinBox(self)
         self.min_wavelength_input.setRange(380, 740)
+        self.min_wavelength_input.setValue(380)
         self.min_wavelength_input.setMinimumWidth(70)
         self.max_wavelength_input = QDoubleSpinBox(self)
         self.max_wavelength_input.setRange(380, 740)
+        self.max_wavelength_input.setValue(740)
         self.max_wavelength_input.setMinimumWidth(70)
         self.intensity_input = QDoubleSpinBox(self)
         self.intensity_input.setRange(0, 1)
@@ -490,7 +503,7 @@ class AddDialog(QDialog):
         self.combo_box = QComboBox()
         self.combo_box.addItem("3D object")
         self.combo_box.addItem("Light source")
-        self.combo_box.addItem("Camera")
+        #self.combo_box.addItem("Camera")
 
         # Create the form layout
         form_layout = QFormLayout()
