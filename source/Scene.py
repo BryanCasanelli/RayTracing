@@ -6,6 +6,9 @@ from RaySource import RaySource
 import numpy as np
 from vispy import scene
 from vispy.visuals.filters import ShadingFilter
+from Vector import Vector
+from Ray import Ray
+from Material import Material
 
 class Scene:
     """
@@ -22,6 +25,7 @@ class Scene:
         Initializes a new Scene object.
         """
         self.objects = []
+        self.rays = []
         self._camera_parameters = {'center': (0, 0, 0),'elevation': 30,'azimuth': 120} # Default camera parameters
         
 
@@ -131,6 +135,20 @@ class Scene:
                 )
                 view.add(normal_line)
 
+        # Add each ray to the scene
+        for ray in self.rays:
+            if ray.final_point != None:
+                # Get the start and end points of the ray
+                start = ray.origin.get_coordinates()
+                end = ray.final_point.get_coordinates()
+
+                # Ray color
+                color = ray.wavelength_to_rgba()
+
+                # Create a line visual for the ray
+                ray_line = scene.visuals.Line(pos=np.array([start, end]), color=color, width=2)
+                view.add(ray_line)
+
         # Add coordinate axes to the scene
         length = 1e20
         axis_x = scene.visuals.Line(pos=np.array([[0, 0, 0], [length, 0, 0]]), color='red')
@@ -172,3 +190,98 @@ class Scene:
 
         scene_description = '; '.join(object_descriptions)
         return f"Scene(Objects: {scene_description})"
+    
+    def simulate(self, num_rays: int, min_intensity: float = 0.1, final_length: float = 20, max_reflections: int = 1):
+        """
+        Simulates the propagation of rays through the scene.
+
+        Parameters:
+        - num_rays (int): The number of rays to simulate.
+        - min_intensity (float): The minimum intensity of a ray to continue simulating.
+        - final_length (float): The length of the ray for the last segment of the simulation.
+        """
+        # Clear the list of rays
+        self.rays = []
+        # Interate over each object in the scene until find a RaySource
+        for obj in self.objects:
+            if isinstance(obj, RaySource):
+                # Generate the specified number of rays
+                for n in range(num_rays):
+                    ray = obj.get_next_ray()
+                    # Propagate the ray through the scene
+                    self._propagate(ray, min_intensity, final_length, max_reflections)
+                    
+    def _propagate(self, ray, min_intensity, final_length, max_reflections):
+        """
+        Propagates a ray through the scene, checking for intersections with polyhedrons.
+
+        Parameters:
+        - num_rays (int): The number of rays to simulate.
+        - min_intensity (float): The minimum intensity of a ray to continue simulating.
+        - final_length (float): The length of the ray for the last segment of the simulation.
+        """
+        # Check if the ray's intensity is below the minimum
+        if ray.intensity < min_intensity:
+            return
+        # Search for intersections with Polyhedrons
+        intersections = []
+        for polyhedron in self.objects:
+            if isinstance(polyhedron, Polyhedron):
+                intersection = polyhedron.get_nearest_intersection(ray)
+                # If an intersection is found
+                if intersection is not None:
+                    intersections.append(intersection + [polyhedron])
+        # If intersections were found
+        if intersections:
+            # Get the nearest intersection
+            intersection = min(intersections, key=lambda i: i[0].distance(ray.origin))
+            # Get the intersection data
+            intersection_point = intersection[0]
+            intersection_face = intersection[1]
+            intersection_polyhedron = intersection[2]
+            # Get all the vectors needed
+            ray_normal = ray.normal
+            face_normal = intersection_face.normal
+            # If the angle between the inverse ray normal and the intersection face normal is greater than 90 degrees, flip the normal
+            ray_normal_inverted = ray.normal.copy()
+            ray_normal_inverted.invert()
+            if ray_normal_inverted.angle_with(face_normal) > np.pi/2:
+                face_normal.invert()
+            # Set final point, automatically compute the loss of intensity
+            ray.set_final_point(intersection_point)
+            # Finish current ray
+            self.rays.append(ray.copy())
+            # Materials, reffractive index and angles
+            m1 = ray.medium
+            m2 = intersection_polyhedron.material
+            if m1.name == m2.name:
+                m2 = Material()  # This condicion can happen when the ray is going out the polyhedron, set the outside material as Vacuum
+            n1 = m1.get_refractive_index(ray.wavelength).real
+            n2 = m2.get_refractive_index(ray.wavelength).real
+            n1_n2_ratio = (n1/n2)
+            theta_1 = ray_normal_inverted.angle_with(face_normal)
+            theta_2 = np.arcsin(n1_n2_ratio * np.sin(theta_1))
+            # Reflectance
+            r_parallel = np.abs((n1*np.cos(theta_1) - n2*np.cos(theta_2)) / (n1*np.cos(theta_1) + n2*np.cos(theta_2)))**2
+            r_perpendicular = np.abs((n2*np.cos(theta_1) - n1*np.cos(theta_2)) / (n2*np.cos(theta_1) + n1*np.cos(theta_2)))**2
+            reflectance = (r_parallel + r_perpendicular) / 2
+            # Transmittance
+            transmittance = 1 - reflectance
+            # Calculate the reflected ray
+            if max_reflections > 0:
+                reflected_vector = Vector(ray_normal.get_coordinates() - 2 * face_normal.get_coordinates() * ray_normal.dot(face_normal))
+                reflected_intensity = ray.intensity * reflectance
+                reflected_ray = Ray(intersection_point, reflected_vector, ray.wavelength, reflected_intensity)
+                reflected_ray.medium = m1
+                max_reflections -= 1
+                self._propagate(reflected_ray, min_intensity, final_length, max_reflections)
+            # Calculate the transmitted ray
+            transmitted_vector = Vector(n1_n2_ratio*ray.normal.get_coordinates() + (n1_n2_ratio*np.cos(theta_1) - np.cos(theta_2))*face_normal.get_coordinates())
+            transmitted_intensity = ray.intensity * transmittance
+            transmitted_ray = Ray(intersection_point, transmitted_vector, ray.wavelength, transmitted_intensity)
+            transmitted_ray.medium = intersection_polyhedron.material
+            self._propagate(transmitted_ray, min_intensity, final_length, max_reflections)
+        # No intersection found, add the ray to the list
+        else:
+            ray.set_final_point(Point(ray.origin.get_coordinates() + ray.normal.get_coordinates() * final_length))
+            self.rays.append(ray)
