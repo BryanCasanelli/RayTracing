@@ -1,5 +1,7 @@
 import numpy as np
 import warnings
+import numpy as np
+import copy
 
 class Vector:
     """
@@ -12,13 +14,18 @@ class Vector:
         module (float): The module (magnitude) of the vector.
     """
 
-    def __init__(self, x: float, y: float, z: float) -> None:
+    def __init__(self, x: float, y: float = None, z: float = None) -> None:
         """
         Initializes a new Vector with the specified x, y, and z components and calculates its module.
         """
-        self.x = x
-        self.y = y
-        self.z = z
+        if isinstance(x, (tuple, list, np.ndarray)):
+            if len(x) != 3:
+                raise ValueError("Input must be a tuple, list, or numpy array of length 3")
+            self.x, self.y, self.z = x
+        else:
+            self.x = x
+            self.y = y
+            self.z = z
         self.module = self._calculate_module()
 
     def _calculate_module(self) -> float:
@@ -28,7 +35,7 @@ class Vector:
         Returns:
             float: The module of the vector.
         """
-        return np.sqrt(self.x**2 + self.y**2 + self.z**2)
+        return np.linalg.norm(self.get_coordinates())
 
     def get_coordinates(self) -> tuple:
         """
@@ -37,7 +44,7 @@ class Vector:
         Returns:
             tuple: A tuple containing the x, y, and z coordinates of the vector.
         """
-        return (self.x, self.y, self.z)
+        return np.array([self.x, self.y, self.z])
 
     def normalize(self):
         """
@@ -51,6 +58,7 @@ class Vector:
             self.x /= mod
             self.y /= mod
             self.z /= mod
+            self.module = self._calculate_module()
 
     def dot(self, other) -> float:
         """
@@ -62,7 +70,7 @@ class Vector:
         Returns:
             float: The dot product of the two vectors.
         """
-        return self.x * other.x + self.y * other.y + self.z * other.z
+        return np.dot(self.get_coordinates(), other.get_coordinates())
 
     def cross(self, other) -> 'Vector':
         """
@@ -74,9 +82,8 @@ class Vector:
         Returns:
             Vector: The cross product of the two vectors.
         """
-        return Vector(self.y * other.z - self.z * other.y,
-                      self.z * other.x - self.x * other.z,
-                      self.x * other.y - self.y * other.x)
+        cross_product = np.cross(self.get_coordinates(), other.get_coordinates())
+        return Vector(cross_product[0], cross_product[1], cross_product[2])
 
     def angle_with(self, other) -> float:
         """
@@ -93,6 +100,14 @@ class Vector:
         if magnitude_product == 0:
             raise ValueError("Cannot calculate angle with a zero vector")
         return np.arccos(dot_product / magnitude_product)
+    
+    def invert(self):
+        """
+        Inverts the vector.
+        """
+        self.x = -self.x
+        self.y = -self.y
+        self.z = -self.z
     
     @staticmethod
     def random_unit_vector():
@@ -117,3 +132,12 @@ class Vector:
             str: The string representation of the Vector.
         """
         return f"Vector(x={self.x}, y={self.y}, z={self.z}, module={self.module})"
+    
+    def copy(self):
+        """
+        Returns a copy of the Vector.
+
+        Returns:
+            Vector: A copy of the Vector.
+        """
+        return copy.deepcopy(self)
