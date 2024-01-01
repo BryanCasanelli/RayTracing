@@ -1,6 +1,7 @@
 import csv
 from scipy.interpolate import interp1d
 from pathlib import Path
+import numpy as np
 
 class Material:
     def __init__(self, file_path=None):
@@ -61,4 +62,4 @@ class Material:
         """
         real_part = self.real_interpolator(wavelength)
         imag_part = self.imag_interpolator(wavelength)
-        return complex(real_part, imag_part)
+        return np.complex(real_part, imag_part)
