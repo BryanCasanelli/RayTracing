@@ -448,6 +448,9 @@ class AddRaySourceDialog(QDialog):
         for vertex in self.vertex_inputs:
             for spin_box in vertex:
                 spin_box.setEnabled(is_rectangle)
+        self.origin_x_input.setEnabled(not is_rectangle)
+        self.origin_y_input.setEnabled(not is_rectangle)
+        self.origin_z_input.setEnabled(not is_rectangle)
 
     def get_values(self):
             """
