@@ -1,5 +1,8 @@
 from Point import Point
 from Vector import Vector
+from Material import Material
+import numpy as np
+import copy
 
 class Ray:
     """
@@ -10,6 +13,7 @@ class Ray:
         normal (Vector): The normal vector indicating the direction of the ray.
         wavelength (float): The wavelength of the ray.
         intensity (float): The intensity of the ray, ranging from 0.0 to 1.0.
+        final_point (Point): The final point of the ray.
     """
 
     def __init__(self, origin: Point, normal: Vector, wavelength: float, intensity = 1.0) -> None:
@@ -24,8 +28,10 @@ class Ray:
         """
         self.origin = origin
         self.normal = normal
+        self.final_point = None
         self.wavelength = wavelength
         self.intensity = intensity
+        self.medium = Material()
 
     def __str__(self) -> str:
         """
@@ -38,12 +44,25 @@ class Ray:
                 f"Direction: ({self.normal.x}, {self.normal.y}, {self.normal.z}), "
                 f"Wavelength: {self.wavelength})")
     
+    def set_final_point(self, final_point: Point) -> None:
+        """
+        Sets the final point of the Ray.
+
+        Args:
+            final_point (Point): The final point of the Ray.
+        """
+        self.final_point = final_point
+        distance = self.origin.distance(final_point)*10**-3  # Convert from mm to m
+        n_img = self.medium.get_refractive_index(self.wavelength).imag
+        alpha = 4*np.pi*n_img/(self.wavelength*10**-9)  # Convert from nm to m
+        self.intensity *= np.exp(-alpha * distance)
+    
     def wavelength_to_rgba(self):
         """
         Convert the wavelength in nanometers to an RGBA color using the CIE 1931 color space approximation.
 
         Returns:
-            tuple: RGBA color represented as (R, G, B, Alpha), values in the range [0, 255] for RGB and [0,1] for Alpha.
+            tuple: RGBA color represented as (R, G, B, Alpha) with values in the range [0, 1].
         """
         gamma = 0.8
         intensity_max = 255
@@ -83,8 +102,17 @@ class Ray:
         elif (self.wavelength >= 645) and (self.wavelength <= 750):
             factor = 0.3 + 0.7 * (750 - self.wavelength) / (750 - 645)
 
-        R = int(intensity_max * (R * factor) ** gamma)
-        G = int(intensity_max * (G * factor) ** gamma)
-        B = int(intensity_max * (B * factor) ** gamma)
+        R = int(intensity_max * (R * factor) ** gamma)/255
+        G = int(intensity_max * (G * factor) ** gamma)/255
+        B = int(intensity_max * (B * factor) ** gamma)/255
 
         return (R, G, B, self.intensity)
+
+    def copy(self):
+        """
+        Returns a copy of the Ray.
+
+        Returns:
+            Ray: A copy of the Ray.
+        """
+        return copy.deepcopy(self)
