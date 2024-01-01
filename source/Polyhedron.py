@@ -4,6 +4,7 @@ from RectangularPlanarPolygon import RectangularPlanarPolygon
 from Material import Material
 import warnings
 from pathlib import Path
+from Ray import Ray
 
 class Polyhedron:
     """
@@ -231,3 +232,39 @@ class Polyhedron:
 
         faces_str = '; '.join(face_descriptions)
         return f"Polyhedron(Faces: {faces_str})"
+    
+    def get_intersections(self, ray: Ray):
+        """
+        Finds all intersections of the ray with the Polyhedron.
+
+        Args:
+            ray (Ray): The Ray object to find the intersections with.
+
+        Returns:
+            list of Point: The list of intersection points, or an empty list if no intersections were found.
+        """
+        intersections = []
+
+        # Check if the ray intersects with any face of the polyhedron
+        for face in self.faces:
+            intersection = face.get_intersection(ray)
+            if intersection is not None:
+                intersections.append([intersection, face])
+
+        return intersections
+
+    def get_nearest_intersection(self, ray: Ray):
+        """
+        Finds the nearest intersection of the ray with the Polyhedron.
+
+        Args:
+            ray (Ray): The Ray object to find the intersection with.
+
+        Returns:
+            Point: The nearest intersection point, or None if no intersections were found.
+        """
+        intersections = self.get_intersections(ray)
+        if intersections:
+            return min(intersections, key=lambda p: p[0].distance(ray.origin))
+        else:
+            return None
