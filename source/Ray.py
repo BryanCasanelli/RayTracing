@@ -32,6 +32,7 @@ class Ray:
         self.wavelength = wavelength
         self.intensity = intensity
         self.medium = Material()
+        self.used = False
 
     def __str__(self) -> str:
         """
