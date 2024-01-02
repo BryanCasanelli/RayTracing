@@ -9,6 +9,7 @@ from vispy.visuals.filters import ShadingFilter
 from Vector import Vector
 from Ray import Ray
 from Material import Material
+import dill
 
 class Scene:
     """
@@ -285,3 +286,29 @@ class Scene:
         else:
             ray.set_final_point(Point(ray.origin.get_coordinates() + ray.normal.get_coordinates() * final_length))
             self.rays.append(ray)
+
+    def save_to_file(self, file_path):
+        """
+        Save the current scene object to a file using dill.
+
+        Args:
+            file_path (str): The path to the file where the scene object will be saved.
+        """
+        with open(file_path, 'wb') as file:
+            data_to_save = {
+                'objects': self.objects,
+                'rays': self.rays
+            }
+            dill.dump(data_to_save, file)
+
+    def load_from_file(self, file_path):
+        """
+        Load a Scene object from a file.
+
+        Args:
+            file_path (str): The path to the file containing the serialized Scene object.
+        """
+        with open(file_path, 'rb') as file:
+            data_loaded = dill.load(file)
+            self.objects = data_loaded['objects']
+            self.rays = data_loaded['rays']
