@@ -39,6 +39,24 @@ class TriangularPlanarPolygon:
         y = (self.vertices[0].y + self.vertices[1].y + self.vertices[2].y) / 3
         z = (self.vertices[0].z + self.vertices[1].z + self.vertices[2].z) / 3
         return Point(x, y, z)
+    
+    def area(self) -> float:
+        """
+        Calculates the area of the triangle.
+
+        Returns:
+            float: The area of the triangle.
+        """
+        # Calculate the area using cross product
+        p0 = self.vertices[0].get_coordinates()
+        p1 = self.vertices[1].get_coordinates()
+        p2 = self.vertices[2].get_coordinates()
+        v1 = p1 - p0
+        v2 = p2 - p0
+        cross_product = np.cross(v1, v2)
+        magnitude = np.linalg.norm(cross_product)
+        return 0.5 * magnitude
+
 
     def get_vertices(self) -> list:
         """
