@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout, QProgressBar, QCheckBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTableWidget, QTableWidgetItem, QHBoxLayout, QSplitter, QAbstractItemView, QDialog, QDoubleSpinBox, QGridLayout, QLabel, QSizePolicy, QComboBox, QFormLayout, QProgressBar, QCheckBox, QFrame
 from Scene import Scene
 from Polyhedron import Polyhedron
 from Point import Point
@@ -27,6 +27,9 @@ class MainWindow(QMainWindow):
         if test:
             self.scene.add_object(Polyhedron("resources/obj/sphere.obj"))
 
+        # Initialize the last used directory
+        self.last_used_directory = None
+
         # Create the author label
         self.author_label = QLabel("By Bryan Casanelli - bryancasanelli@gmail.com")
         self.author_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -51,6 +54,14 @@ class MainWindow(QMainWindow):
         # Add "select material" button
         self.select_material_button = QPushButton("Select material")
         self.select_material_button.clicked.connect(self.show_material_dialog)
+
+        # Add "save" button
+        self.save_button = QPushButton("Save")
+        self.save_button.clicked.connect(self.save)
+
+        # Add "load" button
+        self.load_button = QPushButton("Load")
+        self.load_button.clicked.connect(self.load)
 
         # Create the show/hide polyhedrons button
         self.show_polyhedrons = QCheckBox("Show polyhedrons")
@@ -87,6 +98,8 @@ class MainWindow(QMainWindow):
         self.left_pannel_layout.addWidget(self.move_button)
         self.left_pannel_layout.addWidget(self.change_ref_button)
         self.left_pannel_layout.addWidget(self.select_material_button)
+        self.left_pannel_layout.addWidget(self.save_button)
+        self.left_pannel_layout.addWidget(self.load_button)
         self.left_pannel_layout.addWidget(self.table_widget)
         self.left_pannel_layout.addWidget(self.simulate_button)
         self.left_pannel_layout.addWidget(self.progress_bar)
@@ -308,7 +321,7 @@ class MainWindow(QMainWindow):
         for file_name in file_names:
             if file_name:
                 # Create a new Polyhedron from the OBJ file
-                polyhedron = Polyhedron(file_name, progress_callback_function = lambda x: self.progress_bar.setValue(int(x)))
+                polyhedron = Polyhedron(file_name)
                 
                 # Add the Polyhedron to the Scene
                 self.scene.add_object(polyhedron)
@@ -344,6 +357,29 @@ class MainWindow(QMainWindow):
         """
         self.scene.simulate(10)
         self.update_visualization()
+
+    def save(self):
+        """
+        Opens a file dialog to save the scene to a file.
+        """
+        directory = self.last_used_directory if self.last_used_directory is not None else str(Path.home())
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save scene", directory, "Scene Files (*.scene)")
+        if file_name:
+            self.last_used_directory = str(Path(file_name).parent)
+            if not file_name.endswith(".scene"):
+                file_name += ".scene"
+            self.scene.save_to_file(file_name)
+
+    def load(self):
+        """
+        Opens a file dialog to load a scene from a file.
+        """
+        directory = self.last_used_directory if self.last_used_directory is not None else str(Path.home())
+        file_name, _ = QFileDialog.getOpenFileName(self, "Load scene", directory, "Scene Files (*.scene)")
+        if file_name:
+            self.last_used_directory = str(Path(file_name).parent)
+            self.scene.load_from_file(file_name)
+            self.update_visualization()
 
 class AddRaySourceDialog(QDialog):
     """
