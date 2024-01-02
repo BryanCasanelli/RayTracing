@@ -59,6 +59,7 @@ class Vector:
             self.y /= mod
             self.z /= mod
             self.module = self._calculate_module()
+        return self
 
     def dot(self, other) -> float:
         """
