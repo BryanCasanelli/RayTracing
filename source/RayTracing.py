@@ -84,10 +84,39 @@ class MainWindow(QMainWindow):
 
         # Create the simulation button
         self.simulate_button = QPushButton("Simulate")
+        self.simulate_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.simulate_button.clicked.connect(self.simulate)
+
+        # Create the ray count spin box
+        self.ray_count_spin_box = QDoubleSpinBox(self)
+        self.ray_count_spin_box.setMinimumWidth(70)
+        self.ray_count_spin_box.setDecimals(0)
+        self.ray_count_spin_box.setValue(10)  # Default value
+        self.ray_count_spin_box.setMinimum(1)  # Minimum value
+        self.ray_count_spin_box.setMaximum(float('inf'))  # Maximum value as infinite
+
+        # Create the final length spin box
+        self.final_length_spin_box = QDoubleSpinBox(self)
+        self.final_length_spin_box.setMinimumWidth(70)
+        self.final_length_spin_box.setDecimals(2)
+        self.final_length_spin_box.setValue(20)
+        self.final_length_spin_box.setMinimum(0)
+        self.final_length_spin_box.setMaximum(float('inf'))
 
         # Create the progress bar
         self.progress_bar = QProgressBar()
+
+        # Simulation layout
+        self.simulation_layout = QHBoxLayout()
+        self.simulation_layout.setSpacing(5)
+        self.simulation_layout.setContentsMargins(0, 0, 0, 0)
+        self.simulation_layout.addWidget(QLabel("Ray count :"))
+        self.simulation_layout.addWidget(self.ray_count_spin_box)
+        self.simulation_layout.addWidget(QLabel("Final length [mm] :"))
+        self.simulation_layout.addWidget(self.final_length_spin_box)
+        self.simulation_layout.addWidget(self.simulate_button)
+        self.simulation_widget = QWidget()
+        self.simulation_widget.setLayout(self.simulation_layout)
 
         # Left pannel
         self.left_pannel_layout = QVBoxLayout()
@@ -101,7 +130,7 @@ class MainWindow(QMainWindow):
         self.left_pannel_layout.addWidget(self.save_button)
         self.left_pannel_layout.addWidget(self.load_button)
         self.left_pannel_layout.addWidget(self.table_widget)
-        self.left_pannel_layout.addWidget(self.simulate_button)
+        self.left_pannel_layout.addWidget(self.simulation_widget)
         self.left_pannel_layout.addWidget(self.progress_bar)
         self.left_pannel_widget = QWidget()
         self.left_pannel_widget.setLayout(self.left_pannel_layout)
@@ -355,7 +384,7 @@ class MainWindow(QMainWindow):
         """
         Simulates the scene by tracing the rays from the light sources and calculating the intensity of each ray.
         """
-        self.scene.simulate(10)
+        self.scene.simulate(int(self.ray_count_spin_box.value()), final_length = self.final_length_spin_box.value())
         self.update_visualization()
 
     def save(self):
@@ -379,7 +408,7 @@ class MainWindow(QMainWindow):
         if file_name:
             self.last_used_directory = str(Path(file_name).parent)
             self.scene.load_from_file(file_name)
-            self.update_visualization()
+            self.update()
 
 class AddRaySourceDialog(QDialog):
     """
