@@ -686,7 +686,7 @@ class ChangeReferencePointDialog(QDialog):
         self.setWindowTitle("Change reference point")
 
         self.ref_type_combo_box = QComboBox(self)
-        self.ref_type_combo_box.addItems(["Lowest", "Highest", "Manual"])
+        self.ref_type_combo_box.addItems(["Centroid", "Lowest", "Highest", "Manual"])
         self.ref_type_combo_box.currentTextChanged.connect(self.update_axis_combo_box)
 
         self.axis_combo_box = QComboBox(self)
@@ -768,6 +768,11 @@ class ChangeReferencePointDialog(QDialog):
             self.x_spin_box.setEnabled(True)
             self.y_spin_box.setEnabled(True)
             self.z_spin_box.setEnabled(True)
+        elif text == "Centroid":
+            self.axis_combo_box.setEnabled(False)
+            self.x_spin_box.setEnabled(False)
+            self.y_spin_box.setEnabled(False)
+            self.z_spin_box.setEnabled(False)
         else:
             self.axis_combo_box.setEnabled(True)
             self.x_spin_box.setEnabled(False)
