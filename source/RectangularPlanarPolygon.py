@@ -24,8 +24,8 @@ class RectangularPlanarPolygon:
             raise ValueError("A RectangularPlanarPolygon must be initialized with exactly four vertices.")
 
         self.vertices = vertices
-        self.triangle1 = TriangularPlanarPolygon([vertices[0], vertices[1], vertices[2]])
-        self.triangle2 = TriangularPlanarPolygon([vertices[2], vertices[3], vertices[0]])
+        self.triangle1 = TriangularPlanarPolygon([vertices[0].copy(), vertices[1].copy(), vertices[2].copy()])
+        self.triangle2 = TriangularPlanarPolygon([vertices[2].copy(), vertices[3].copy(), vertices[0].copy()])
         self.normal = self.triangle1.normal  # Using the normal from the first triangle
 
     def centroid(self) -> Point:

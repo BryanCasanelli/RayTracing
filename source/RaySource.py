@@ -147,7 +147,7 @@ class RaySource:
         direction = self._random_vector_in_cone()
 
         if self.mode == 'point':
-            origin = self.reference
+            origin = self.reference.copy()
         elif self.mode == 'rectangle':
             origin = self._random_point_in_rectangle()
 

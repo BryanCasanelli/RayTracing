@@ -249,7 +249,7 @@ class Scene:
             if ray_normal_inverted.angle_with(face_normal) > np.pi/2:
                 face_normal.invert()
             # Set final point, automatically compute the loss of intensity
-            ray.set_final_point(intersection_point)
+            ray.set_final_point(intersection_point.copy())
             # Finish current ray
             self.rays.append(ray.copy())
             # Materials, reffractive index and angles
