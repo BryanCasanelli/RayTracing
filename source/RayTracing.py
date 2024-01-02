@@ -81,6 +81,11 @@ class MainWindow(QMainWindow):
         self.show_polyhedrons.setChecked(True)
         self.show_polyhedrons.stateChanged.connect(self.update_visualization)
 
+        # Create the "Hide unused rays" button
+        self.hide_unused_rays_button = QCheckBox("Hide unused rays")
+        self.hide_unused_rays_button.setChecked(True)
+        self.hide_unused_rays_button.stateChanged.connect(self.update_visualization)
+
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
         self.vispy_canvas.native.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -155,6 +160,7 @@ class MainWindow(QMainWindow):
         self.upper_pannel_layout = QHBoxLayout()
         self.upper_pannel_layout.setContentsMargins(0, 0, 0, 0)
         self.upper_pannel_layout.addWidget(self.show_polyhedrons)
+        self.upper_pannel_layout.addWidget(self.hide_unused_rays_button)
         self.upper_pannel_layout.addStretch()
         self.upper_pannel_widget = QWidget()
         self.upper_pannel_widget.setLayout(self.upper_pannel_layout)
@@ -194,7 +200,8 @@ class MainWindow(QMainWindow):
         Updates the visualization of the scene in the VisPy canvas.
         """
         show_polyhedrons = self.show_polyhedrons.isChecked()
-        self.scene.vispy_display(self.vispy_canvas, show_polyhedrons)
+        hide_unused_rays = self.hide_unused_rays_button.isChecked()
+        self.scene.vispy_display(self.vispy_canvas, show_polyhedrons, hide_unused_rays)
 
     def update_table(self):
         """
