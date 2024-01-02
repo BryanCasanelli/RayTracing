@@ -60,7 +60,7 @@ class Scene:
         if index >= 0 and index < len(self.objects):
             del self.objects[index]
 
-    def vispy_display(self, canvas, show_polyhedrons=True):
+    def vispy_display(self, canvas, show_polyhedrons=True, hide_unused_rays=True):
         """
         Shows the faces of each Polyhedron as a mesh surface using VisPy.
 
@@ -138,6 +138,8 @@ class Scene:
 
         # Add each ray to the scene
         for ray in self.rays:
+            if hide_unused_rays and not ray.used:
+                continue
             if ray.final_point != None:
                 # Get the start and end points of the ray
                 start = ray.origin.get_coordinates()
@@ -234,6 +236,8 @@ class Scene:
                     intersections.append(intersection + [polyhedron])
         # If intersections were found
         if intersections:
+            # Mark the ray as used
+            ray.used = True
             # Get the nearest intersection
             intersection = min(intersections, key=lambda i: i[0].distance(ray.origin))
             # Get the intersection data
@@ -274,6 +278,7 @@ class Scene:
                 reflected_intensity = ray.intensity * reflectance
                 reflected_ray = Ray(intersection_point, reflected_vector, ray.wavelength, reflected_intensity)
                 reflected_ray.medium = m1
+                reflected_ray.used = True
                 max_reflections -= 1
                 self._propagate(reflected_ray, min_intensity, final_length, max_reflections)
             # Calculate the transmitted ray
@@ -281,6 +286,7 @@ class Scene:
             transmitted_intensity = ray.intensity * transmittance
             transmitted_ray = Ray(intersection_point, transmitted_vector, ray.wavelength, transmitted_intensity)
             transmitted_ray.medium = intersection_polyhedron.material
+            transmitted_ray.used = True
             self._propagate(transmitted_ray, min_intensity, final_length, max_reflections)
         # No intersection found, add the ray to the list
         else:
