@@ -341,7 +341,7 @@ class MainWindow(QMainWindow):
             # Get the values from the dialog
             origin, normal, aperture_angle, min_wavelength, max_wavelength, rectangle, mode, intensity = dialog.get_values()
             # Count the existing RaySource objects in the scene
-            ray_source_count = sum(1 for obj in self.scene.objects if isinstance(obj, RaySource))
+            ray_source_count = sum(1 for obj in self.scene.objects if isinstance(obj, RaySource) and obj.mode == mode)
             # Generate a unique name for the new RaySource
             ray_source_name = f"{mode.capitalize()} Source {ray_source_count + 1}"
             # Create a new RaySource
