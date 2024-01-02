@@ -5,6 +5,7 @@ from Material import Material
 import warnings
 from pathlib import Path
 from Ray import Ray
+import numpy as np
 
 class Polyhedron:
     """
@@ -189,13 +190,15 @@ class Polyhedron:
         or to the manually specified coordinates.
 
         Args:
-            ref_type (str): The reference type, either "Lowest", "Highest", or "Manual".
+            ref_type (str): The reference type, either "Centroid", "Lowest", "Highest", or "Manual".
             axis (str): The axis, either "x", "y", or "z".
             x (float): The x-coordinate of the new reference point (optional).
             y (float): The y-coordinate of the new reference point (optional).
             z (float): The z-coordinate of the new reference point (optional).
         """
-        if ref_type == "Lowest":
+        if ref_type == "Centroid":
+            self.reference = self.centroid()
+        elif ref_type == "Lowest":
             if self.vertices:
                 self.reference = min(self.vertices, key=lambda vertex: getattr(vertex, axis))
         elif ref_type == "Highest":
@@ -216,6 +219,34 @@ class Polyhedron:
             material_path (str): The path to the material file.
         """
         self.material = Material(material_path)
+
+    def area(self) -> float:
+        """
+        Calculates the total surface area of the Polyhedron.
+
+        Returns:
+            float: The total surface area of the Polyhedron.
+        """
+        area = 0
+        for face in self.faces:
+            area += face.area()
+        return area
+
+    def centroid(self) -> Point:
+        """
+        Calculates the centroid (middle point) of the Polyhedron.
+
+        Returns:
+            Point: The centroid of the Polyhedron.
+        """
+        if self.vertices: # Is not only a point
+            centroid = np.array([0.0, 0.0, 0.0])
+            for face in self.faces:
+                centroid += face.centroid().get_coordinates()*face.area()
+            centroid /= self.area()
+            return Point(centroid)
+        else:  # Is only a point
+            return self.reference.copy()
 
     def __str__(self) -> str:
         """
