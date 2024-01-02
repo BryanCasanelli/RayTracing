@@ -8,6 +8,7 @@ from RaySource import RaySource
 from RectangularPlanarPolygon import RectangularPlanarPolygon
 from vispy import scene
 from pathlib import Path
+import numpy as np
 
 test = True
 class MainWindow(QMainWindow):
@@ -55,6 +56,18 @@ class MainWindow(QMainWindow):
         self.select_material_button = QPushButton("Select material")
         self.select_material_button.clicked.connect(self.show_material_dialog)
 
+        # Add "change normal" button
+        self.change_normal_button = QPushButton("Change normal")
+        self.change_normal_button.clicked.connect(self.change_normal)
+
+        # Add "change wavelength" button
+        self.change_wavelength_button = QPushButton("Change wavelength")
+        self.change_wavelength_button.clicked.connect(self.change_wavelength)
+
+        # Add "change aperture angle" button
+        self.change_aperture_angle_button = QPushButton("Change aperture angle")
+        self.change_aperture_angle_button.clicked.connect(self.change_aperture_angle)
+
         # Add "save" button
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(self.save)
@@ -76,8 +89,8 @@ class MainWindow(QMainWindow):
         # Create the table widget
         self.table_widget = QTableWidget()
         self.table_widget.itemSelectionChanged.connect(self.update_buttons_state)
-        self.table_widget.setColumnCount(11)
-        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]", "Material", "Nx [mm]", "Ny [mm]", "Nz [mm]"])
+        self.table_widget.setColumnCount(14)
+        self.table_widget.setHorizontalHeaderLabels(["Type", "Name", "Points", "Faces", "X [mm]", "Y [mm]", "Z [mm]", "Material", "Nx [mm]", "Ny [mm]", "Nz [mm]", "λ min [nm]", "λ max [nm]", "Aperture angle [°]"])
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.update_table()
@@ -127,6 +140,9 @@ class MainWindow(QMainWindow):
         self.left_pannel_layout.addWidget(self.move_button)
         self.left_pannel_layout.addWidget(self.change_ref_button)
         self.left_pannel_layout.addWidget(self.select_material_button)
+        self.left_pannel_layout.addWidget(self.change_normal_button)
+        self.left_pannel_layout.addWidget(self.change_wavelength_button)
+        self.left_pannel_layout.addWidget(self.change_aperture_angle_button)
         self.left_pannel_layout.addWidget(self.save_button)
         self.left_pannel_layout.addWidget(self.load_button)
         self.left_pannel_layout.addWidget(self.table_widget)
@@ -186,24 +202,30 @@ class MainWindow(QMainWindow):
         """
         self.table_widget.clearContents()
         self.table_widget.setRowCount(len(self.scene.objects))
-        for row, polyhedron in enumerate(self.scene.objects):
-            self.table_widget.setItem(row, 0, QTableWidgetItem(type(polyhedron).__name__))
-            self.table_widget.setItem(row, 1, QTableWidgetItem(polyhedron.name))
-            self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(polyhedron.vertices))))
-            self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(polyhedron.faces))))
-            self.table_widget.setItem(row, 4, QTableWidgetItem(format(polyhedron.reference.x, '.2f')))
-            self.table_widget.setItem(row, 5, QTableWidgetItem(format(polyhedron.reference.y, '.2f')))
-            self.table_widget.setItem(row, 6, QTableWidgetItem(format(polyhedron.reference.z, '.2f')))
-            if isinstance(polyhedron, Polyhedron):
-                self.table_widget.setItem(row, 7, QTableWidgetItem(polyhedron.material.name))
+        for row, obj in enumerate(self.scene.objects):
+            self.table_widget.setItem(row, 0, QTableWidgetItem(type(obj).__name__))
+            self.table_widget.setItem(row, 1, QTableWidgetItem(obj.name))
+            self.table_widget.setItem(row, 2, QTableWidgetItem(str(len(obj.vertices))))
+            self.table_widget.setItem(row, 3, QTableWidgetItem(str(len(obj.faces))))
+            self.table_widget.setItem(row, 4, QTableWidgetItem(format(obj.reference.x, '.2f')))
+            self.table_widget.setItem(row, 5, QTableWidgetItem(format(obj.reference.y, '.2f')))
+            self.table_widget.setItem(row, 6, QTableWidgetItem(format(obj.reference.z, '.2f')))
+            if isinstance(obj, Polyhedron):
+                self.table_widget.setItem(row, 7, QTableWidgetItem(obj.material.name))
                 self.table_widget.setItem(row, 8, QTableWidgetItem("---"))
                 self.table_widget.setItem(row, 9, QTableWidgetItem("---"))
                 self.table_widget.setItem(row, 10, QTableWidgetItem("---"))
+                self.table_widget.setItem(row, 11, QTableWidgetItem("---"))
+                self.table_widget.setItem(row, 12, QTableWidgetItem("---"))
+                self.table_widget.setItem(row, 13, QTableWidgetItem("---"))
             else:
                 self.table_widget.setItem(row, 7, QTableWidgetItem("---"))
-                self.table_widget.setItem(row, 8, QTableWidgetItem(format(polyhedron.normal.x, '.2f')))
-                self.table_widget.setItem(row, 9, QTableWidgetItem(format(polyhedron.normal.x, '.2f')))
-                self.table_widget.setItem(row, 10, QTableWidgetItem(format(polyhedron.normal.x, '.2f')))
+                self.table_widget.setItem(row, 8, QTableWidgetItem(format(obj.normal.x, '.2f')))
+                self.table_widget.setItem(row, 9, QTableWidgetItem(format(obj.normal.y, '.2f')))
+                self.table_widget.setItem(row, 10, QTableWidgetItem(format(obj.normal.z, '.2f')))
+                self.table_widget.setItem(row, 11, QTableWidgetItem(format(obj.min_wavelength, '.2f')))
+                self.table_widget.setItem(row, 12, QTableWidgetItem(format(obj.max_wavelength, '.2f')))
+                self.table_widget.setItem(row, 13, QTableWidgetItem(format(obj.aperture_angle, '.2f')))
         self.table_widget.resizeColumnsToContents()
         self.table_widget.resizeRowsToContents()
         width = sum(self.table_widget.columnWidth(i) + 1 for i in range(self.table_widget.columnCount()))
@@ -247,13 +269,23 @@ class MainWindow(QMainWindow):
             # Special case for non-polyhedron objects
             if non_polyhedron_selected:
                 self.select_material_button.setEnabled(False)
+                self.change_normal_button.setEnabled(True)
+                self.change_wavelength_button.setEnabled(True)
+                self.change_aperture_angle_button.setEnabled(True)
+            # Special case for polyhedron objects
             else:
                 self.select_material_button.setEnabled(True)
+                self.change_normal_button.setEnabled(False)
+                self.change_wavelength_button.setEnabled(False)
+                self.change_aperture_angle_button.setEnabled(False)
         else:
             self.delete_button.setEnabled(False)
             self.move_button.setEnabled(False)
             self.change_ref_button.setEnabled(False)
             self.select_material_button.setEnabled(False)
+            self.change_normal_button.setEnabled(False)
+            self.change_wavelength_button.setEnabled(False)
+            self.change_aperture_angle_button.setEnabled(False)
 
     def move_selected_object(self):
         """
@@ -409,6 +441,219 @@ class MainWindow(QMainWindow):
             self.last_used_directory = str(Path(file_name).parent)
             self.scene.load_from_file(file_name)
             self.update()
+
+    def change_normal(self):
+        """
+        Opens a dialog to change the normal vector of the selected objects.
+        """
+        selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
+        dialog = ChangeNormalDialog(self, self.scene.objects[selected_rows[0]].normal)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            nx, ny, nz = dialog.get_values()
+            for row in selected_rows:
+                # Change the normal vector
+                self.scene.objects[row].normal = Vector(nx, ny, nz).normalize()
+
+        # Update the visualization and the table
+        self.update()
+
+    def change_wavelength(self):
+        """
+        Opens a dialog to change the wavelength of the selected objects.
+        """
+        selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
+        dialog = ChangeWavelengthDialog(self, self.scene.objects[selected_rows[0]].min_wavelength, self.scene.objects[selected_rows[0]].max_wavelength)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            min_wavelength, max_wavelength = dialog.get_values()
+            for row in selected_rows:
+                # Change the wavelength
+                self.scene.objects[row].min_wavelength = min_wavelength
+                self.scene.objects[row].max_wavelength = max_wavelength
+
+        # Update the table
+        self.update_table()
+
+    def change_aperture_angle(self):
+        """
+        Opens a dialog to change the aperture angle of the selected objects.
+        """
+        selected_rows = sorted(set(index.row() for index in self.table_widget.selectedIndexes()))
+        dialog = ChangeApertureAngleDialog(self, self.scene.objects[selected_rows[0]].aperture_angle)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            aperture_angle = dialog.get_values()
+            for row in selected_rows:
+                # Change the aperture angle
+                self.scene.objects[row].aperture_angle = np.radians(aperture_angle)
+
+        # Update the table
+        self.update_table()
+
+class ChangeNormalDialog(QDialog):
+    """
+    A dialog window for changing the normal vector.
+
+    This dialog allows the user to input the x, y, and z components of the normal vector.
+
+    The user can retrieve the values entered in the dialog using the `get_values` method.
+    """
+    def __init__(self, parent=None, current_normal=None):
+        super().__init__(parent)
+        self.setWindowTitle("Change normal")
+
+        # Input fields
+        self.nx_input = QDoubleSpinBox(self)
+        self.nx_input.setDecimals(2)
+        self.nx_input.setRange(-float('inf'), float('inf'))
+        self.nx_input.setValue(current_normal.x if current_normal is not None else 0)
+        self.nx_input.setMinimumWidth(70)
+        self.ny_input = QDoubleSpinBox(self)
+        self.ny_input.setDecimals(2)
+        self.ny_input.setRange(-float('inf'), float('inf'))
+        self.ny_input.setMinimumWidth(70)
+        self.ny_input.setValue(current_normal.y if current_normal is not None else 0)
+        self.nz_input = QDoubleSpinBox(self)
+        self.nz_input.setDecimals(2)
+        self.nz_input.setRange(-float('inf'), float('inf'))
+        self.nz_input.setMinimumWidth(70)
+        self.nz_input.setValue(current_normal.z if current_normal is not None else 1)
+
+        # OK and Cancel buttons
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        # Layouts
+        main_layout = QVBoxLayout(self)
+        form_layout = QFormLayout()
+        button_layout = QHBoxLayout()
+
+        # Layout
+        form_layout.addRow("Nx [mm] :", self.nx_input)
+        form_layout.addRow("Ny [mm] :", self.ny_input)
+        form_layout.addRow("Nz [mm] :", self.nz_input)
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        self.setLayout(main_layout)
+
+    def get_values(self):
+        """
+        Get the values from the input fields and return them as a tuple.
+
+        Returns:
+            tuple: A tuple containing the following values:
+                - nx (float): The x component of the normal vector.
+                - ny (float): The y component of the normal vector.
+                - nz (float): The z component of the normal vector.
+        """
+        return self.nx_input.value(), self.ny_input.value(), self.nz_input.value()
+
+class ChangeWavelengthDialog(QDialog):
+    """
+    A dialog window for changing the wavelength.
+
+    This dialog allows the user to input the minimum and maximum wavelengths.
+
+    The user can retrieve the values entered in the dialog using the `get_values` method.
+    """
+    def __init__(self, parent=None, current_min_wavelength=None, current_max_wavelength=None):
+        super().__init__(parent)
+        self.setWindowTitle("Change wavelength")
+
+        # Input fields
+        self.min_wavelength_input = QDoubleSpinBox(self)
+        self.min_wavelength_input.setDecimals(2)
+        self.min_wavelength_input.setRange(380, 740)
+        self.min_wavelength_input.setMinimumWidth(70)
+        self.min_wavelength_input.setValue(current_min_wavelength if current_min_wavelength is not None else 380)
+        self.max_wavelength_input = QDoubleSpinBox(self)
+        self.max_wavelength_input.setDecimals(2)
+        self.max_wavelength_input.setRange(380, 740)
+        self.max_wavelength_input.setMinimumWidth(70)
+        self.max_wavelength_input.setValue(current_max_wavelength if current_max_wavelength is not None else 740)
+
+        # OK and Cancel buttons
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        # Layouts
+        main_layout = QVBoxLayout(self)
+        form_layout = QFormLayout()
+        button_layout = QHBoxLayout()
+
+        # Layout
+        form_layout.addRow("Min Wavelength [nm] :", self.min_wavelength_input)
+        form_layout.addRow("Max Wavelength [nm] :", self.max_wavelength_input)
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        self.setLayout(main_layout)
+
+    def get_values(self):
+        """
+        Get the values from the input fields and return them as a tuple.
+
+        Returns:
+            tuple: A tuple containing the following values:
+                - min_wavelength (float): The minimum wavelength.
+                - max_wavelength (float): The maximum wavelength.
+        """
+        return self.min_wavelength_input.value(), self.max_wavelength_input.value()
+
+class ChangeApertureAngleDialog(QDialog):
+    """
+    A dialog window for changing the aperture angle.
+
+    This dialog allows the user to input the aperture angle.
+
+    The user can retrieve the value entered in the dialog using the `get_values` method.
+    """
+    def __init__(self, parent=None, current_aperture_angle=None):
+        super().__init__(parent)
+        self.setWindowTitle("Change aperture angle")
+
+        # Input fields
+        self.aperture_angle_input = QDoubleSpinBox(self)
+        self.aperture_angle_input.setDecimals(2)
+        self.aperture_angle_input.setRange(0, 180)
+        self.aperture_angle_input.setMinimumWidth(70)
+        self.aperture_angle_input.setValue(current_aperture_angle if current_aperture_angle is not None else 0)
+
+        # OK and Cancel buttons
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("Cancel", self)
+        self.cancel_button.clicked.connect(self.reject)
+
+        # Layouts
+        main_layout = QVBoxLayout(self)
+        form_layout = QFormLayout()
+        button_layout = QHBoxLayout()
+
+        # Layout
+        form_layout.addRow("Aperture Angle [°] :", self.aperture_angle_input)
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        self.setLayout(main_layout)
+
+    def get_values(self):
+        """
+        Get the value from the input field and return it.
+
+        Returns:
+            float: The aperture angle.
+        """
+        return self.aperture_angle_input.value()
 
 class AddRaySourceDialog(QDialog):
     """
