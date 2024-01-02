@@ -59,6 +59,7 @@ class MainWindow(QMainWindow):
 
         # Create the VisPy canvas
         self.vispy_canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
+        self.vispy_canvas.native.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.update_visualization()
 
         # Create the table widget
@@ -77,49 +78,49 @@ class MainWindow(QMainWindow):
         # Create the progress bar
         self.progress_bar = QProgressBar()
 
-        # Buttons pannel
-        self.buttons_layout = QVBoxLayout()
-        self.buttons_layout.setSpacing(1)
-        self.buttons_layout.addWidget(self.add_button)
-        self.buttons_layout.addWidget(self.delete_button)
-        self.buttons_layout.addWidget(self.move_button)
-        self.buttons_layout.addWidget(self.change_ref_button)
-        self.buttons_layout.addWidget(self.select_material_button)
-        self.buttons_widget = QWidget()
-        self.buttons_widget.setLayout(self.buttons_layout)
+        # Left pannel
+        self.left_pannel_layout = QVBoxLayout()
+        self.left_pannel_layout.setSpacing(5)
+        self.left_pannel_layout.setContentsMargins(0, 0, 0, 0)
+        self.left_pannel_layout.addWidget(self.add_button)
+        self.left_pannel_layout.addWidget(self.delete_button)
+        self.left_pannel_layout.addWidget(self.move_button)
+        self.left_pannel_layout.addWidget(self.change_ref_button)
+        self.left_pannel_layout.addWidget(self.select_material_button)
+        self.left_pannel_layout.addWidget(self.table_widget)
+        self.left_pannel_layout.addWidget(self.simulate_button)
+        self.left_pannel_layout.addWidget(self.progress_bar)
+        self.left_pannel_widget = QWidget()
+        self.left_pannel_widget.setLayout(self.left_pannel_layout)
 
         # Upper pannel
-        self.plot_buttons_layout = QHBoxLayout()
-        self.plot_buttons_layout.addWidget(self.show_polyhedrons)
-        self.plot_buttons_layout.addStretch()
-        self.plot_buttons_layout.setContentsMargins(0, 0, 0, 0)
-        self.plot_buttons_widget = QWidget()
-        self.plot_buttons_widget.setLayout(self.plot_buttons_layout)
-
-        # Left pannel
-        splitter1 = QSplitter(Qt.Vertical)
-        splitter1.addWidget(self.buttons_widget)
-        splitter1.addWidget(self.table_widget)
-        splitter1.addWidget(self.simulate_button)
-        splitter1.setSizes([1, 10000, 1])
+        self.upper_pannel_layout = QHBoxLayout()
+        self.upper_pannel_layout.setContentsMargins(0, 0, 0, 0)
+        self.upper_pannel_layout.addWidget(self.show_polyhedrons)
+        self.upper_pannel_layout.addStretch()
+        self.upper_pannel_widget = QWidget()
+        self.upper_pannel_widget.setLayout(self.upper_pannel_layout)
 
         # Upper pannel + VisPy canvas
-        splitter2 = QSplitter(Qt.Vertical)
-        splitter2.addWidget(self.plot_buttons_widget)
-        splitter2.addWidget(self.vispy_canvas.native)
-        splitter2.setSizes([1, 10000])
+        self.plot_layout = QVBoxLayout()
+        self.plot_layout.setSpacing(5)
+        self.plot_layout.setContentsMargins(0, 0, 0, 0)
+        self.plot_layout.addWidget(self.upper_pannel_widget)
+        self.plot_layout.addWidget(self.vispy_canvas.native)
+        self.plot_widget = QWidget()
+        self.plot_widget.setLayout(self.plot_layout)
 
-        # Left pannel + VisPy canvas and plot buttons
-        splitter3 = QSplitter(Qt.Horizontal)
-        splitter3.addWidget(splitter1)
-        splitter3.addWidget(splitter2)
-        splitter3.setSizes([1, 10000])
+        # Left + Plot
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(self.left_pannel_widget)
+        splitter.addWidget(self.plot_widget)
+        splitter.setSizes([1, 10000])
 
         # All + author
         all_layout = QVBoxLayout()
         all_layout.setSpacing(5)
         all_layout.setContentsMargins(10, 10, 10, 5)
-        all_layout.addWidget(splitter3)
+        all_layout.addWidget(splitter)
         all_layout.addWidget(self.author_label)
         all_widget = QWidget()
         all_widget.setLayout(all_layout)
