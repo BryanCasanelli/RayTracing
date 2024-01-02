@@ -126,7 +126,7 @@ class Scene:
             # Check if the object is an instance of RaySource and display its normal
             if isinstance(obj, RaySource):
                 # Calculate the endpoint of the normal vector
-                normal_end = np.array(obj.reference.get_coordinates()) + np.array(obj.normal.get_coordinates())
+                normal_end = np.array(obj.reference.get_coordinates()) + 10*np.array(obj.normal.get_coordinates())
                 
                 # Create a line visual for the normal vector
                 normal_line = scene.visuals.Line(
